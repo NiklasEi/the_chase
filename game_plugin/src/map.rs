@@ -1,10 +1,9 @@
-use crate::GameState;
+use crate::{GameState, TiledMap};
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use tiled::parse;
 use tiled::LayerData::Finite;
 use tiled::PropertyValue::BoolValue;
 
@@ -14,8 +13,10 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(Map::Ground)
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(draw_map.system()));
+        app.insert_resource(Map::Ground).add_system_set(
+            SystemSet::on_enter(GameState::Playing)
+                .with_system(load_map.system().chain(draw_map.system())),
+        );
     }
 }
 
@@ -49,7 +50,7 @@ pub enum Map {
 
 impl Map {
     fn file(&self) -> String {
-        format!("assets/map/{}.tmx", self.name())
+        format!("map/{}.tmx", self.name())
     }
 
     fn name(&self) -> &str {
@@ -58,13 +59,11 @@ impl Map {
             Map::Earth => "earth",
         }
     }
+}
 
-    fn load(&self) -> MapData {
-        let file = File::open(&Path::new(&self.file())).unwrap();
-        println!("{}", self.file());
-        let reader = BufReader::new(file);
-        let map = parse(reader).unwrap();
-
+fn load_map(current_map: Res<Map>, maps: Res<Assets<TiledMap>>) -> Option<MapData> {
+    if let Some(map) = maps.get(&current_map.file()[..]) {
+        let map = &map.map;
         let mut path_map: HashMap<u32, String> = HashMap::default();
         for set in map.tilesets.iter() {
             for tile in set.tiles.iter() {
@@ -123,22 +122,23 @@ impl Map {
             colliding_layers.push(colliding.contains(&floor_index));
             tile_layers.push(floor);
         }
-        MapData {
+        return Some(MapData {
             layers: tile_layers,
             height: map.height as usize,
             width: map.width as usize,
             colliding_layers,
-        }
+        });
     }
+    None
 }
 
 fn draw_map(
+    map_data: In<Option<MapData>>,
     mut commands: Commands,
-    map: Res<Map>,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let map_data: MapData = map.load();
+    let map_data: MapData = map_data.0.expect("There is no map O.o");
     for (layer_index, layer) in map_data.layers.iter().enumerate() {
         let collide = map_data
             .colliding_layers

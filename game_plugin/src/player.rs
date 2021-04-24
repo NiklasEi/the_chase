@@ -1,5 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
+use crate::map::{Collide, TILE_SIZE};
 use crate::GameState;
 use bevy::prelude::*;
 
@@ -33,8 +34,8 @@ fn spawn_player(
 ) {
     commands
         .spawn_bundle(SpriteBundle {
-            material: materials.add(textures.texture_bevy.clone().into()),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+            material: materials.add(textures.texture_player.clone().into()),
+            transform: Transform::from_translation(Vec3::new(64., 64., 1.)),
             ..Default::default()
         })
         .insert(Player);
@@ -45,6 +46,7 @@ fn move_player(
     actions: Res<Actions>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
+    collider_query: Query<&Collide>,
 ) {
     if actions.player_movement.is_none() {
         return;
@@ -56,6 +58,15 @@ fn move_player(
         0.,
     );
     for mut player_transform in player_query.iter_mut() {
+        let x =
+            ((player_transform.translation.x + movement.x + TILE_SIZE / 2.) / TILE_SIZE) as usize;
+        let y =
+            ((player_transform.translation.y + movement.y + TILE_SIZE / 2.) / TILE_SIZE) as usize;
+        for collide in collider_query.iter() {
+            if collide.x == x && collide.y == y {
+                return;
+            }
+        }
         player_transform.translation += movement;
         if let Ok(mut camera_transform) = camera_query.single_mut() {
             camera_transform.translation.x = player_transform.translation.x;

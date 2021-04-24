@@ -21,6 +21,7 @@ pub struct LoadingState {
     textures: Vec<HandleUntyped>,
     fonts: Vec<HandleUntyped>,
     audio: Vec<HandleUntyped>,
+    maps: Vec<HandleUntyped>,
 }
 
 pub struct FontAssets {
@@ -32,7 +33,7 @@ pub struct AudioAssets {
 }
 
 pub struct TextureAssets {
-    pub texture_bevy: Handle<Texture>,
+    pub texture_player: Handle<Texture>,
 }
 
 fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -43,14 +44,19 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     audio.push(asset_server.load_untyped(PATHS.audio_flying));
 
     let mut textures: Vec<HandleUntyped> = vec![];
-    textures.push(asset_server.load_untyped(PATHS.texture_bevy));
+    textures.push(asset_server.load_untyped(PATHS.texture_player));
     textures.push(asset_server.load_untyped(PATHS.texture_wall));
     textures.push(asset_server.load_untyped(PATHS.texture_path));
+
+    let mut maps: Vec<HandleUntyped> = vec![];
+    maps.push(asset_server.load_untyped("map/ground.tmx"));
+    maps.push(asset_server.load_untyped("map/earth.tmx"));
 
     commands.insert_resource(LoadingState {
         textures,
         fonts,
         audio,
+        maps,
     });
 }
 
@@ -75,6 +81,11 @@ fn check_state(
     {
         return;
     }
+    if LoadState::Loaded
+        != asset_server.get_group_load_state(loading_state.maps.iter().map(|handle| handle.id))
+    {
+        return;
+    }
 
     commands.insert_resource(FontAssets {
         fira_sans: asset_server.get_handle(PATHS.fira_sans),
@@ -85,7 +96,7 @@ fn check_state(
     });
 
     commands.insert_resource(TextureAssets {
-        texture_bevy: asset_server.get_handle(PATHS.texture_bevy),
+        texture_player: asset_server.get_handle(PATHS.texture_player),
     });
 
     state.set(GameState::Menu).unwrap();
