@@ -44,6 +44,8 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let mut textures: Vec<HandleUntyped> = vec![];
     textures.push(asset_server.load_untyped(PATHS.texture_bevy));
+    textures.push(asset_server.load_untyped(PATHS.texture_wall));
+    textures.push(asset_server.load_untyped(PATHS.texture_path));
 
     commands.insert_resource(LoadingState {
         textures,

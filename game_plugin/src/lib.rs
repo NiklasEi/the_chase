@@ -1,6 +1,7 @@
 mod actions;
 mod audio;
 mod loading;
+mod map;
 mod menu;
 mod player;
 
@@ -12,6 +13,7 @@ use crate::player::PlayerPlugin;
 
 use bevy::app::AppBuilder;
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use crate::map::MapPlugin;
 use bevy::prelude::*;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -31,6 +33,7 @@ impl Plugin for GamePlugin {
             .add_plugin(MenuPlugin)
             .add_plugin(InternalAudioPlugin)
             .add_plugin(PlayerPlugin)
+            .add_plugin(MapPlugin)
             // .add_plugin(FrameTimeDiagnosticsPlugin::default())
             // .add_plugin(LogDiagnosticsPlugin::default())
             ;

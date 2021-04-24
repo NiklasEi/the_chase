@@ -6,6 +6,7 @@ use bevy::prelude::*;
 pub struct PlayerPlugin;
 
 pub struct Player;
+pub struct PlayerCamera;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
@@ -20,7 +21,9 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .insert(PlayerCamera);
 }
 
 fn spawn_player(
@@ -40,7 +43,8 @@ fn spawn_player(
 fn move_player(
     time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
+    mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
     if actions.player_movement.is_none() {
         return;
@@ -53,6 +57,10 @@ fn move_player(
     );
     for mut player_transform in player_query.iter_mut() {
         player_transform.translation += movement;
+        if let Ok(mut camera_transform) = camera_query.single_mut() {
+            camera_transform.translation.x = player_transform.translation.x;
+            camera_transform.translation.y = player_transform.translation.y;
+        }
     }
 }
 
