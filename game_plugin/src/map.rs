@@ -61,7 +61,8 @@ pub struct Collide {
 
 pub enum Map {
     Ground,
-    Earth,
+    Dirt,
+    Stone,
 }
 
 impl Map {
@@ -72,33 +73,40 @@ impl Map {
     fn name(&self) -> &str {
         match self {
             Map::Ground => "ground",
-            Map::Earth => "earth",
+            Map::Dirt => "dirt",
+            Map::Stone => "stone",
         }
     }
 
     pub fn start_slot(&self) -> Slot {
         match self {
-            Map::Ground => Slot { column: 0, row: 2 },
-            Map::Earth => Slot { column: 5, row: 5 },
+            Map::Ground => Slot { column: 1, row: 0 },
+            Map::Dirt => Slot { column: 5, row: 5 },
+            Map::Stone => Slot { column: 5, row: 5 },
         }
     }
 
     pub fn goal_slot(&self) -> Slot {
         match self {
-            Map::Ground => Slot { column: 5, row: 5 },
-            Map::Earth => Slot { column: 5, row: 1 },
+            Map::Ground => Slot { column: 9, row: 10 },
+            Map::Dirt => Slot { column: 5, row: 1 },
+            Map::Stone => Slot { column: 5, row: 1 },
         }
     }
 
     pub fn dimensions(&self) -> Dimensions {
         match self {
             Map::Ground => Dimensions {
-                columns: 10,
-                rows: 10,
+                columns: 20,
+                rows: 20,
             },
-            Map::Earth => Dimensions {
-                columns: 10,
-                rows: 10,
+            Map::Dirt => Dimensions {
+                columns: 20,
+                rows: 20,
+            },
+            Map::Stone => Dimensions {
+                columns: 20,
+                rows: 20,
             },
         }
     }

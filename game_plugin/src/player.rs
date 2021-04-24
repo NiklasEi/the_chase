@@ -55,6 +55,7 @@ fn spawn_player(
 fn move_player(
     time: Res<Time>,
     actions: Res<Actions>,
+    map: Res<Map>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
     collider_query: Query<&Collide>,
@@ -73,6 +74,9 @@ fn move_player(
             ((player_transform.translation.x + movement.x + TILE_SIZE / 2.) / TILE_SIZE) as usize;
         let y =
             ((player_transform.translation.y + movement.y + TILE_SIZE / 2.) / TILE_SIZE) as usize;
+        if x >= map.dimensions().columns || y >= map.dimensions().rows {
+            return;
+        }
         for collide in collider_query.iter() {
             if collide.x == x && collide.y == y {
                 return;

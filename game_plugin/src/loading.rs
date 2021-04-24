@@ -43,14 +43,31 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut audio: Vec<HandleUntyped> = vec![];
     audio.push(asset_server.load_untyped(PATHS.audio_flying));
 
+    let texture_names = [
+        "box",
+        "dirtexit",
+        "dirtpath",
+        "dirtwall",
+        "groundexit",
+        "groundpath",
+        "groundwall",
+        "lavaexit",
+        "lavapath",
+        "lavawall",
+        "stoneexit",
+        "stonepath",
+        "stonewall",
+    ];
     let mut textures: Vec<HandleUntyped> = vec![];
     textures.push(asset_server.load_untyped(PATHS.texture_player));
-    textures.push(asset_server.load_untyped(PATHS.texture_wall));
-    textures.push(asset_server.load_untyped(PATHS.texture_path));
+    for name in &texture_names {
+        textures.push(asset_server.load_untyped(&format!("textures/{}.png", name)[..]));
+    }
 
     let mut maps: Vec<HandleUntyped> = vec![];
     maps.push(asset_server.load_untyped("map/ground.tmx"));
-    maps.push(asset_server.load_untyped("map/earth.tmx"));
+    maps.push(asset_server.load_untyped("map/dirt.tmx"));
+    maps.push(asset_server.load_untyped("map/stone.tmx"));
 
     commands.insert_resource(LoadingState {
         textures,
