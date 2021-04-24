@@ -1,4 +1,4 @@
-use crate::GameState;
+use crate::GameStage;
 use bevy::prelude::*;
 
 pub struct MenuPlugin;
@@ -6,9 +6,9 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
-            .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(setup_menu.system()))
+            .add_system_set(SystemSet::on_enter(GameStage::Menu).with_system(setup_menu.system()))
             .add_system_set(
-                SystemSet::on_update(GameState::Menu).with_system(click_play_button.system()),
+                SystemSet::on_update(GameStage::Menu).with_system(click_play_button.system()),
             );
     }
 }
@@ -77,7 +77,7 @@ type ButtonInteraction<'a> = (
 fn click_play_button(
     mut commands: Commands,
     button_materials: Res<ButtonMaterials>,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<State<GameStage>>,
     mut interaction_query: Query<ButtonInteraction, (Changed<Interaction>, With<Button>)>,
     text_query: Query<Entity, With<Text>>,
 ) {
@@ -87,7 +87,7 @@ fn click_play_button(
             Interaction::Clicked => {
                 commands.entity(button).despawn();
                 commands.entity(text).despawn();
-                state.set(GameState::Playing).unwrap();
+                state.set(GameStage::Playing).unwrap();
             }
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();

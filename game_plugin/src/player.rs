@@ -1,7 +1,7 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
-use crate::map::{Collide, TILE_SIZE};
-use crate::GameState;
+use crate::map::{Collide, Map, MapSystemLabels, TILE_SIZE};
+use crate::GameStage;
 use bevy::prelude::*;
 
 pub struct PlayerPlugin;
@@ -12,30 +12,41 @@ pub struct PlayerCamera;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
+            SystemSet::on_enter(GameStage::Playing)
+                .after(MapSystemLabels::DrawMap)
                 .with_system(spawn_player.system())
                 .with_system(spawn_camera.system()),
         )
-        .add_system_set(SystemSet::on_update(GameState::Playing).with_system(move_player.system()))
-        .add_system_set(SystemSet::on_exit(GameState::Playing).with_system(remove_player.system()));
+        .add_system_set(SystemSet::on_update(GameStage::Playing).with_system(move_player.system()))
+        .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(remove_player.system()));
     }
 }
 
-fn spawn_camera(mut commands: Commands) {
+fn spawn_camera(mut commands: Commands, current_map: Res<Map>) {
+    let spawn_position: (f32, f32) = current_map.position_from_slot(current_map.start_slot());
     commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .spawn_bundle(OrthographicCameraBundle {
+            transform: Transform::from_xyz(spawn_position.0, spawn_position.1, 1000. - 0.1),
+            ..OrthographicCameraBundle::new_2d()
+        })
         .insert(PlayerCamera);
 }
 
 fn spawn_player(
     mut commands: Commands,
+    current_map: Res<Map>,
     textures: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
+    let spawn_position: (f32, f32) = current_map.position_from_slot(current_map.start_slot());
     commands
         .spawn_bundle(SpriteBundle {
             material: materials.add(textures.texture_player.clone().into()),
-            transform: Transform::from_translation(Vec3::new(64., 64., 1.)),
+            transform: Transform::from_translation(Vec3::new(
+                spawn_position.0,
+                spawn_position.1,
+                1.,
+            )),
             ..Default::default()
         })
         .insert(Player);

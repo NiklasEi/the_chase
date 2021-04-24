@@ -4,6 +4,7 @@ mod loading;
 mod map;
 mod menu;
 mod player;
+mod scenes;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
@@ -14,6 +15,7 @@ use crate::player::PlayerPlugin;
 use bevy::app::AppBuilder;
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use crate::map::MapPlugin;
+use crate::scenes::{CutScene, ScenesPlugin};
 use anyhow::{Error, Result};
 use bevy::asset::{AssetLoader, AssetServerSettings, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
@@ -23,7 +25,7 @@ use std::path::{Path, PathBuf};
 use tiled::{Map, TiledError};
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
-enum GameState {
+enum GameStage {
     Loading,
     Playing,
     Menu,
@@ -40,9 +42,13 @@ impl Plugin for GamePlugin {
             .asset_folder
             .clone();
 
-        app.add_asset::<TiledMap>().add_asset_loader(TiledMapLoader::new(asset_folder)).add_state(GameState::Loading)
+        app.add_asset::<TiledMap>()
+            .add_asset_loader(TiledMapLoader::new(asset_folder))
+            .add_state(GameStage::Loading)
+            .init_resource::<GameState>()
             .add_plugin(LoadingPlugin)
             .add_plugin(ActionsPlugin)
+            .add_plugin(ScenesPlugin)
             .add_plugin(MenuPlugin)
             .add_plugin(InternalAudioPlugin)
             .add_plugin(PlayerPlugin)
@@ -50,6 +56,20 @@ impl Plugin for GamePlugin {
             // .add_plugin(FrameTimeDiagnosticsPlugin::default())
             // .add_plugin(LogDiagnosticsPlugin::default())
             ;
+    }
+}
+
+pub struct GameState {
+    pub frozen: bool,
+    pub scene: Option<CutScene>,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            frozen: true,
+            scene: None,
+        }
     }
 }
 

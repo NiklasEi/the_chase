@@ -1,20 +1,26 @@
-use crate::{GameState, TiledMap};
+use crate::{GameStage, TiledMap};
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use tiled::LayerData::Finite;
-use tiled::PropertyValue::BoolValue;
+use tiled::PropertyValue::{BoolValue, IntValue};
 
 pub const TILE_SIZE: f32 = 64.;
+
+#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+pub enum MapSystemLabels {
+    DrawMap,
+}
 
 pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(Map::Earth).add_system_set(
-            SystemSet::on_enter(GameState::Playing)
+        app.insert_resource(Map::Ground).add_system_set(
+            SystemSet::on_enter(GameStage::Playing)
+                .label(MapSystemLabels::DrawMap)
                 .with_system(load_map.system().chain(draw_map.system())),
         );
     }
@@ -25,6 +31,16 @@ pub struct MapData {
     colliding_layers: Vec<bool>,
     height: usize,
     width: usize,
+}
+
+pub struct Slot {
+    pub column: usize,
+    pub row: usize,
+}
+
+pub struct Dimensions {
+    pub columns: usize,
+    pub rows: usize,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -58,6 +74,41 @@ impl Map {
             Map::Ground => "ground",
             Map::Earth => "earth",
         }
+    }
+
+    pub fn start_slot(&self) -> Slot {
+        match self {
+            Map::Ground => Slot { column: 0, row: 2 },
+            Map::Earth => Slot { column: 5, row: 5 },
+        }
+    }
+
+    pub fn goal_slot(&self) -> Slot {
+        match self {
+            Map::Ground => Slot { column: 5, row: 5 },
+            Map::Earth => Slot { column: 5, row: 1 },
+        }
+    }
+
+    pub fn dimensions(&self) -> Dimensions {
+        match self {
+            Map::Ground => Dimensions {
+                columns: 10,
+                rows: 10,
+            },
+            Map::Earth => Dimensions {
+                columns: 10,
+                rows: 10,
+            },
+        }
+    }
+
+    pub fn position_from_slot(&self, slot: Slot) -> (f32, f32) {
+        let dimensions = self.dimensions();
+        (
+            slot.column as f32 * TILE_SIZE,
+            (dimensions.rows - slot.row - 1) as f32 * TILE_SIZE,
+        )
     }
 }
 

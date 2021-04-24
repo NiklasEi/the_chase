@@ -1,6 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::AudioAssets;
-use crate::GameState;
+use crate::GameStage;
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 
@@ -12,11 +12,11 @@ impl Plugin for InternalAudioPlugin {
             flying: AudioChannel::new("flying".to_owned()),
         })
         .add_plugin(AudioPlugin)
-        .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(start_audio.system()))
+        .add_system_set(SystemSet::on_enter(GameStage::Playing).with_system(start_audio.system()))
         .add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(control_flying_sound.system()),
+            SystemSet::on_update(GameStage::Playing).with_system(control_flying_sound.system()),
         )
-        .add_system_set(SystemSet::on_exit(GameState::Playing).with_system(stop_audio.system()));
+        .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(stop_audio.system()));
     }
 }
 
