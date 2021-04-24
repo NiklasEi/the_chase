@@ -13,7 +13,7 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(Map::Ground).add_system_set(
+        app.insert_resource(Map::Earth).add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(load_map.system().chain(draw_map.system())),
         );
