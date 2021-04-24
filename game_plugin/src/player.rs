@@ -9,6 +9,11 @@ pub struct PlayerPlugin;
 pub struct Player;
 pub struct PlayerCamera;
 
+#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+pub enum PlayerSystemLabels {
+    MovePlayer,
+}
+
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
@@ -17,7 +22,11 @@ impl Plugin for PlayerPlugin {
                 .with_system(spawn_player.system())
                 .with_system(spawn_camera.system()),
         )
-        .add_system_set(SystemSet::on_update(GameStage::Playing).with_system(move_player.system()))
+        .add_system_set(
+            SystemSet::on_update(GameStage::Playing)
+                .with_system(move_player.system().label(PlayerSystemLabels::MovePlayer))
+                .with_system(move_camera.system().after(PlayerSystemLabels::MovePlayer)),
+        )
         .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(remove_player.system()));
     }
 }
@@ -57,7 +66,6 @@ fn move_player(
     actions: Res<Actions>,
     map: Res<Map>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
-    mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
     collider_query: Query<&Collide>,
 ) {
     if actions.player_movement.is_none() {
@@ -83,9 +91,39 @@ fn move_player(
             }
         }
         player_transform.translation += movement;
+    }
+}
+
+fn move_camera(
+    map: Res<Map>,
+    windows: Res<Windows>,
+    mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
+    mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
+) {
+    if let Ok(mut player_transform) = player_query.single_mut() {
+        let window = windows.get_primary().expect("No primary window");
+        let x_min = window.width() / 2. - TILE_SIZE / 2.;
+        let x_max =
+            map.dimensions().columns as f32 * TILE_SIZE - window.width() / 2. - TILE_SIZE / 2.;
+        let y_min = window.height() / 2. - TILE_SIZE / 2.;
+        let y_max =
+            map.dimensions().rows as f32 * TILE_SIZE - window.height() / 2. - TILE_SIZE / 2.;
+        let mut x = player_transform.translation.x;
+        let mut y = player_transform.translation.y;
+
+        if x_min < x_max {
+            x = x.clamp(x_min, x_max);
+        } else {
+            x = ((map.dimensions().columns - 1) as f32 * TILE_SIZE) / 2.;
+        }
+        if y_min < y_max {
+            y = y.clamp(y_min, y_max);
+        } else {
+            y = ((map.dimensions().rows - 1) as f32 * TILE_SIZE) / 2.;
+        }
         if let Ok(mut camera_transform) = camera_query.single_mut() {
-            camera_transform.translation.x = player_transform.translation.x;
-            camera_transform.translation.y = player_transform.translation.y;
+            camera_transform.translation.x = x;
+            camera_transform.translation.y = y;
         }
     }
 }
