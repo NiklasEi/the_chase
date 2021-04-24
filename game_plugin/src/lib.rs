@@ -16,13 +16,13 @@ use bevy::app::AppBuilder;
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use crate::map::MapPlugin;
 use crate::scenes::{CutScene, ScenesPlugin};
-use anyhow::{Error, Result};
+use anyhow::Result;
 use bevy::asset::{AssetLoader, AssetServerSettings, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
 use bevy_reflect::TypeUuid;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
-use tiled::{Map, TiledError};
+use tiled::Map;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameStage {

@@ -97,10 +97,10 @@ fn move_player(
 fn move_camera(
     map: Res<Map>,
     windows: Res<Windows>,
-    mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
+    player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
     mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
-    if let Ok(mut player_transform) = player_query.single_mut() {
+    if let Ok(player_transform) = player_query.single() {
         let window = windows.get_primary().expect("No primary window");
         let x_min = window.width() / 2. - TILE_SIZE / 2.;
         let x_max =

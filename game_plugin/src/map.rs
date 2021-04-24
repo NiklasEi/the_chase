@@ -1,11 +1,8 @@
 use crate::{GameStage, TiledMap};
 use bevy::prelude::*;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
 use tiled::LayerData::Finite;
-use tiled::PropertyValue::{BoolValue, IntValue};
+use tiled::PropertyValue::BoolValue;
 
 pub const TILE_SIZE: f32 = 64.;
 
