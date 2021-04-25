@@ -2,11 +2,13 @@ use crate::GameState;
 use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 
-pub enum CutScene {
-    Intro,
-}
+pub struct GroundIntro;
 
 pub struct ScenesPlugin;
+
+pub enum CutScene {
+    GroundIntro,
+}
 
 impl Plugin for ScenesPlugin {
     fn build(&self, app: &mut AppBuilder) {

@@ -67,7 +67,7 @@ pub struct GameState {
 impl Default for GameState {
     fn default() -> Self {
         Self {
-            frozen: true,
+            frozen: false,
             scene: None,
         }
     }

@@ -1,6 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
-use crate::map::{Collide, Map, MapSystemLabels, TILE_SIZE};
+use crate::map::{Collide, Dimensions, Map, MapSystemLabels, TILE_SIZE};
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
 
@@ -31,11 +31,14 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_camera(mut commands: Commands, current_map: Res<Map>) {
-    let spawn_position: (f32, f32) = current_map.position_from_slot(current_map.start_slot());
+fn spawn_camera(mut commands: Commands, current_map: Res<Map>, windows: Res<Windows>) {
+    let (x, y) = current_map.position_from_slot(current_map.start_slot());
+    let window = windows.get_primary().expect("No primary window");
+    let (x, y) = calc_camera_position(x, y, window, &current_map.dimensions());
+
     commands
         .spawn_bundle(OrthographicCameraBundle {
-            transform: Transform::from_xyz(spawn_position.0, spawn_position.1, 1000. - 0.1),
+            transform: Transform::from_xyz(x, y, 1000. - 0.1),
             ..OrthographicCameraBundle::new_2d()
         })
         .insert(PlayerCamera);
@@ -108,30 +111,42 @@ fn move_camera(
     }
     if let Ok(player_transform) = player_query.single() {
         let window = windows.get_primary().expect("No primary window");
-        let x_min = window.width() / 2. - TILE_SIZE / 2.;
-        let x_max =
-            map.dimensions().columns as f32 * TILE_SIZE - window.width() / 2. - TILE_SIZE / 2.;
-        let y_min = window.height() / 2. - TILE_SIZE / 2.;
-        let y_max =
-            map.dimensions().rows as f32 * TILE_SIZE - window.height() / 2. - TILE_SIZE / 2.;
-        let mut x = player_transform.translation.x;
-        let mut y = player_transform.translation.y;
+        let (x, y) = calc_camera_position(
+            player_transform.translation.x,
+            player_transform.translation.y,
+            window,
+            &map.dimensions(),
+        );
 
-        if x_min < x_max {
-            x = x.clamp(x_min, x_max);
-        } else {
-            x = ((map.dimensions().columns - 1) as f32 * TILE_SIZE) / 2.;
-        }
-        if y_min < y_max {
-            y = y.clamp(y_min, y_max);
-        } else {
-            y = ((map.dimensions().rows - 1) as f32 * TILE_SIZE) / 2.;
-        }
         if let Ok(mut camera_transform) = camera_query.single_mut() {
             camera_transform.translation.x = x;
             camera_transform.translation.y = y;
         }
     }
+}
+
+fn calc_camera_position(
+    mut x: f32,
+    mut y: f32,
+    window: &Window,
+    map_dimensions: &Dimensions,
+) -> (f32, f32) {
+    let x_min = window.width() / 2. - TILE_SIZE / 2.;
+    let x_max = map_dimensions.columns as f32 * TILE_SIZE - window.width() / 2. - TILE_SIZE / 2.;
+    let y_min = window.height() / 2. - TILE_SIZE / 2.;
+    let y_max = map_dimensions.rows as f32 * TILE_SIZE - window.height() / 2. - TILE_SIZE / 2.;
+
+    if x_min < x_max {
+        x = x.clamp(x_min, x_max);
+    } else {
+        x = ((map_dimensions.columns - 1) as f32 * TILE_SIZE) / 2.;
+    }
+    if y_min < y_max {
+        y = y.clamp(y_min, y_max);
+    } else {
+        y = ((map_dimensions.rows - 1) as f32 * TILE_SIZE) / 2.;
+    }
+    (x, y)
 }
 
 fn remove_player(mut commands: Commands, player_query: Query<Entity, With<Player>>) {
