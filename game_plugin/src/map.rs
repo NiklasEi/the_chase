@@ -1,7 +1,7 @@
 use crate::loading::TextureAssets;
-use crate::player::calc_camera_position;
+use crate::player::{calc_camera_position, Player};
 use crate::scenes::{CutScene, TriggerScene};
-use crate::{GameStage, TiledMap};
+use crate::{GameStage, GameState, TiledMap};
 use bevy::prelude::*;
 use std::collections::HashMap;
 use tiled::LayerData::Finite;
@@ -28,6 +28,7 @@ impl Plugin for MapPlugin {
             .add_system_set(
                 SystemSet::on_update(GameStage::Playing)
                     .with_system(draw_active_elements.system())
+                    .with_system(check_active_elements.system())
                     .after(MapSystemLabels::DrawMap),
             );
     }
@@ -170,8 +171,8 @@ impl Map {
     pub fn active_elements(&self) -> Vec<ActiveElement> {
         match self {
             Map::Ground => vec![ActiveElement::Button {
-                position: self.tiled_slot_to_bevy_slot(Slot { row: 7, column: 5 }),
-                connected_wall: self.tiled_slot_to_bevy_slot(Slot { row: 10, column: 7 }),
+                position: Slot { row: 7, column: 5 },
+                connected_wall: Slot { row: 10, column: 7 },
             }],
             _ => vec![],
         }
@@ -185,6 +186,7 @@ pub enum ActiveElement {
         connected_wall: Slot,
     },
 }
+pub struct Trigger;
 
 fn load_map(current_map: Res<Map>, maps: Res<Assets<TiledMap>>) -> Option<MapData> {
     if !current_map.is_added() && !current_map.is_changed() {
@@ -340,33 +342,87 @@ fn draw_active_elements(
             connected_wall,
         } = element.clone()
         {
+            let button_slot = current_map.tiled_slot_to_bevy_slot(position);
+            let connected_wall_slot = current_map.tiled_slot_to_bevy_slot(connected_wall);
             commands
                 .spawn_bundle(SpriteBundle {
                     material: materials.add(textures.texture_button.clone().into()),
                     transform: Transform::from_translation(Vec3::new(
-                        position.column as f32 * TILE_SIZE,
-                        position.row as f32 * TILE_SIZE,
+                        button_slot.column as f32 * TILE_SIZE,
+                        button_slot.row as f32 * TILE_SIZE,
                         ACTIVE_ELEMENT_Z,
                     )),
                     ..Default::default()
                 })
-                .insert(element.clone());
+                .insert(element.clone())
+                .insert(Trigger);
             commands
                 .spawn_bundle(SpriteBundle {
                     material: materials
                         .add(asset_server.get_handle("textures/stonewall.png").into()),
                     transform: Transform::from_translation(Vec3::new(
-                        connected_wall.column as f32 * TILE_SIZE,
-                        connected_wall.row as f32 * TILE_SIZE,
+                        connected_wall_slot.column as f32 * TILE_SIZE,
+                        connected_wall_slot.row as f32 * TILE_SIZE,
                         ACTIVE_ELEMENT_Z,
                     )),
                     ..Default::default()
                 })
                 .insert(element.clone())
                 .insert(Collide {
-                    x: connected_wall.column,
-                    y: connected_wall.row,
+                    x: connected_wall_slot.column,
+                    y: connected_wall_slot.row,
                 });
+        }
+    }
+}
+
+fn check_active_elements(
+    mut commands: Commands,
+    current_map: Res<Map>,
+    game_state: Res<GameState>,
+    windows: Res<Windows>,
+    mut elements: Query<(Entity, &Transform, &ActiveElement), With<Trigger>>,
+    player_query: Query<&Transform, With<Player>>,
+    mut trigger_scene: EventWriter<TriggerScene>,
+) {
+    if game_state.frozen {
+        return;
+    }
+    if let Ok(player_transform) = player_query.single() {
+        for (entity, transform, element) in elements.iter_mut() {
+            if Vec2::new(
+                player_transform.translation.x,
+                player_transform.translation.y,
+            )
+            .distance(Vec2::new(transform.translation.x, transform.translation.y))
+                < 10.
+            {
+                commands.entity(entity).remove::<Trigger>();
+                if let ActiveElement::Button {
+                    position: _,
+                    connected_wall,
+                } = element
+                {
+                    let wall = current_map.position_from_slot(connected_wall.clone());
+                    let window = windows.get_primary().expect("No primary window");
+                    trigger_scene.send(TriggerScene {
+                        scene: CutScene::ActivateButton {
+                            button: calc_camera_position(
+                                player_transform.translation.x,
+                                player_transform.translation.y,
+                                window,
+                                &current_map.dimensions(),
+                            ),
+                            wall: calc_camera_position(
+                                wall.0,
+                                wall.1,
+                                window,
+                                &current_map.dimensions(),
+                            ),
+                        },
+                    });
+                }
+            }
         }
     }
 }

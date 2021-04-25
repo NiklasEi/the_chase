@@ -1,8 +1,7 @@
 use crate::actions::Actions;
-use crate::audio::AudioEffect;
-use crate::loading::{AudioAssets, TextureAssets};
+use crate::loading::TextureAssets;
 use crate::map::{Collide, Dimensions, Map, MapSystemLabels, TILE_SIZE};
-use crate::scenes::{CutScene, TriggerScene};
+use crate::scenes::TriggerScene;
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
 
@@ -75,8 +74,6 @@ fn move_player(
     actions: Res<Actions>,
     map: Res<Map>,
     mut trigger_scene: EventWriter<TriggerScene>,
-    audio_assets: Res<AudioAssets>,
-    mut audio_effect: EventWriter<AudioEffect>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     collider_query: Query<&Collide>,
 ) {
@@ -111,11 +108,6 @@ fn move_player(
         )) < 20.
         {
             if let Some(scene) = map.goal_scene() {
-                if let CutScene::MapTransition { to: _to } = &scene {
-                    audio_effect.send(AudioEffect {
-                        handle: audio_assets.fall.clone(),
-                    })
-                }
                 trigger_scene.send(TriggerScene { scene });
             }
         }

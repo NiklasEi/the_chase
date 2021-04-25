@@ -30,6 +30,8 @@ pub struct FontAssets {
 
 pub struct AudioAssets {
     pub fall: Handle<AudioSource>,
+    pub button_click: Handle<AudioSource>,
+    pub wall_moving: Handle<AudioSource>,
 }
 
 pub struct TextureAssets {
@@ -44,6 +46,8 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let mut audio: Vec<HandleUntyped> = vec![];
     audio.push(asset_server.load_untyped(PATHS.audio_fall));
+    audio.push(asset_server.load_untyped(PATHS.audio_button_click));
+    audio.push(asset_server.load_untyped(PATHS.audio_wall_moving));
 
     let texture_names = [
         "box",
@@ -114,6 +118,8 @@ fn check_state(
 
     commands.insert_resource(AudioAssets {
         fall: asset_server.get_handle(PATHS.audio_fall),
+        button_click: asset_server.get_handle(PATHS.audio_button_click),
+        wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
     });
 
     commands.insert_resource(TextureAssets {

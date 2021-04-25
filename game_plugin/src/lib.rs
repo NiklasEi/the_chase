@@ -64,6 +64,7 @@ pub struct GameState {
     pub frozen: bool,
     pub scene: Option<CutScene>,
     pub scene_start: Duration,
+    pub scene_step: u16,
 }
 
 impl Default for GameState {
@@ -72,6 +73,7 @@ impl Default for GameState {
             frozen: false,
             scene: None,
             scene_start: Duration::from_nanos(0),
+            scene_step: 0,
         }
     }
 }
