@@ -34,7 +34,7 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_camera(mut commands: Commands, current_map: Res<Map>, windows: Res<Windows>) {
-    let (x, y) = current_map.position_from_slot(current_map.start_slot());
+    let (x, y) = current_map.start_position();
     let window = windows.get_primary().expect("No primary window");
     let (x, y) = calc_camera_position(x, y, window, &current_map.dimensions());
 
@@ -52,7 +52,7 @@ fn spawn_player(
     textures: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let spawn_position: (f32, f32) = current_map.position_from_slot(current_map.start_slot());
+    let spawn_position: (f32, f32) = current_map.start_position();
     commands
         .spawn_bundle(SpriteBundle {
             material: materials.add(textures.texture_player.clone().into()),
@@ -119,7 +119,7 @@ fn reset_player_position(
 ) {
     if current_map.is_changed() {
         let window = windows.get_primary().expect("No primary window");
-        let spawn_position: (f32, f32) = current_map.position_from_slot(current_map.start_slot());
+        let spawn_position: (f32, f32) = current_map.start_position();
         if let Ok(mut player_transform) = player_query.single_mut() {
             player_transform.translation.x = spawn_position.0;
             player_transform.translation.y = spawn_position.1;

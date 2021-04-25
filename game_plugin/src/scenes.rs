@@ -15,7 +15,7 @@ pub struct TriggerScene {
 
 #[derive(Clone)]
 pub enum CutScene {
-    GroundIntro,
+    Intro { from: (f32, f32), to: (f32, f32) },
     MapTransition { to: Map },
 }
 
@@ -23,21 +23,20 @@ impl Plugin for ScenesPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_event::<TriggerScene>().add_system_set(
             SystemSet::on_update(GameStage::Playing)
-                .with_system(run_ground_intro.system())
+                .with_system(run_intro.system())
                 .with_system(run_transition_scene.system())
                 .with_system(trigger_scene.system()),
         );
     }
 }
 
-fn run_ground_intro(
+fn run_intro(
     mut game_state: ResMut<GameState>,
     time: Res<Time>,
-    windows: Res<Windows>,
     mut camera: Query<&mut Transform, With<PlayerCamera>>,
 ) {
     if let Some(scene) = &game_state.scene {
-        if let CutScene::GroundIntro = scene {
+        if let CutScene::Intro { from, to } = scene {
             const CAMERA_ON_PLAYER: Duration = Duration::from_millis(500);
             const CAMERA_TO_GOAL: Duration = Duration::from_millis(1500);
             const CAMERA_ON_GOAL: Duration = Duration::from_secs(2);
@@ -50,35 +49,18 @@ fn run_ground_intro(
                 return;
             }
 
-            let window = windows.get_primary().expect("No primary window");
-            let starting_point = Map::Ground.position_from_slot(Map::Ground.start_slot());
-            let (x_start, y_start) = calc_camera_position(
-                starting_point.0,
-                starting_point.1,
-                window,
-                &Map::Ground.dimensions(),
-            );
-
             if time
                 .time_since_startup()
                 .gt(&(game_state.scene_start + CAMERA_BACK_TO_PLAYER))
             {
                 if let Ok(mut transform) = camera.single_mut() {
-                    transform.translation.x = x_start;
-                    transform.translation.y = y_start;
+                    transform.translation.x = from.0;
+                    transform.translation.y = from.1;
                 }
                 game_state.scene = None;
                 game_state.frozen = false;
                 return;
             }
-
-            let goal_point = Map::Ground.goal_position();
-            let (x_goal, y_goal) = calc_camera_position(
-                goal_point.0,
-                goal_point.1,
-                window,
-                &Map::Ground.dimensions(),
-            );
 
             if time
                 .time_since_startup()
@@ -88,8 +70,8 @@ fn run_ground_intro(
                     .lt(&(game_state.scene_start + CAMERA_ON_GOAL))
             {
                 if let Ok(mut transform) = camera.single_mut() {
-                    transform.translation.x = x_goal;
-                    transform.translation.y = y_goal;
+                    transform.translation.x = to.0;
+                    transform.translation.y = to.1;
                 }
                 return;
             }
@@ -98,11 +80,11 @@ fn run_ground_intro(
                 .time_since_startup()
                 .lt(&(CAMERA_TO_GOAL + game_state.scene_start))
             {
-                (Vec2::new(x_goal - x_start, y_goal - y_start)
+                (Vec2::new(to.0 - from.0, to.1 - from.1)
                     / (CAMERA_TO_GOAL - CAMERA_ON_PLAYER).as_secs_f32())
                     * time.delta().as_secs_f32()
             } else {
-                (Vec2::new(x_start - x_goal, y_start - y_goal)
+                (Vec2::new(from.0 - to.0, from.1 - to.1)
                     / (CAMERA_BACK_TO_PLAYER - CAMERA_ON_GOAL).as_secs_f32())
                     * time.delta().as_secs_f32()
             };

@@ -1,3 +1,4 @@
+use crate::player::calc_camera_position;
 use crate::scenes::{CutScene, TriggerScene};
 use crate::{GameStage, TiledMap};
 use bevy::prelude::*;
@@ -78,19 +79,22 @@ impl Map {
         }
     }
 
-    pub fn start_slot(&self) -> Slot {
+    pub fn start_position(&self) -> (f32, f32) {
         match self {
-            Map::Ground => Slot { column: 1, row: 0 },
-            Map::Dirt => Slot { column: 5, row: 5 },
-            Map::Stone => Slot { column: 5, row: 5 },
+            Map::Ground => self.position_from_slot(Slot { column: 1, row: 0 }),
+            Map::Dirt => self.position_from_slot(Slot {
+                column: 18,
+                row: 16,
+            }),
+            Map::Stone => self.position_from_slot(Slot { column: 7, row: 12 }),
         }
     }
 
     pub fn goal_position(&self) -> (f32, f32) {
         match self {
             Map::Ground => self.position_from_slot(Slot { column: 9, row: 10 }),
-            Map::Dirt => self.position_from_slot(Slot { column: 5, row: 1 }),
-            Map::Stone => self.position_from_slot(Slot { column: 5, row: 1 }),
+            Map::Dirt => self.position_from_slot(Slot { column: 12, row: 8 }),
+            Map::Stone => self.position_from_slot(Slot { column: 14, row: 5 }),
         }
     }
 
@@ -119,18 +123,31 @@ impl Map {
         )
     }
 
-    pub fn intro_scene(&self) -> Option<CutScene> {
+    pub fn intro_scene(&self, window: &Window) -> Option<CutScene> {
         match self {
-            Map::Ground => Some(CutScene::GroundIntro),
-            Map::Dirt => None,
-            Map::Stone => None,
+            _ => {
+                let from = calc_camera_position(
+                    self.start_position().0,
+                    self.start_position().1,
+                    window,
+                    &self.dimensions(),
+                );
+                let to = calc_camera_position(
+                    self.goal_position().0,
+                    self.goal_position().1,
+                    window,
+                    &self.dimensions(),
+                );
+
+                Some(CutScene::Intro { from, to })
+            }
         }
     }
 
     pub fn goal_scene(&self) -> Option<CutScene> {
         match self {
             Map::Ground => Some(CutScene::MapTransition { to: Map::Dirt }),
-            Map::Dirt => None,
+            Map::Dirt => Some(CutScene::MapTransition { to: Map::Stone }),
             Map::Stone => None,
         }
     }
@@ -215,6 +232,7 @@ fn draw_map(
     mut commands: Commands,
     current_map: Res<Map>,
     asset_server: Res<AssetServer>,
+    windows: Res<Windows>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut trigger_scene: EventWriter<TriggerScene>,
     tiles: Query<Entity, With<MapTile>>,
@@ -262,7 +280,8 @@ fn draw_map(
             }
         }
     }
-    if let Some(scene) = current_map.intro_scene() {
+    let window = windows.get_primary().expect("No primary window");
+    if let Some(scene) = current_map.intro_scene(window) {
         trigger_scene.send(TriggerScene { scene });
     }
 }
