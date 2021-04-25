@@ -105,9 +105,9 @@ fn run_transition_scene(
 ) {
     if let Some(scene) = &game_state.scene {
         if let CutScene::MapTransition { to } = scene {
-            let camera_scale_offset: Vec3 = Vec3::new(-0.95, -0.95, 0.);
-            let player_scale_offset: Vec3 = Vec3::new(-0.9, -0.9, 0.);
-            const ZOOM: Duration = Duration::from_secs(1);
+            let camera_scale_offset: Vec3 = Vec3::new(-0.98, -0.98, 0.);
+            let player_scale_offset: Vec3 = Vec3::new(-0.95, -0.95, 0.);
+            const ZOOM: Duration = Duration::from_secs(2);
 
             if time
                 .time_since_startup()

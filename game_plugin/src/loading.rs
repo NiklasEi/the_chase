@@ -29,7 +29,7 @@ pub struct FontAssets {
 }
 
 pub struct AudioAssets {
-    pub flying: Handle<AudioSource>,
+    pub fall: Handle<AudioSource>,
 }
 
 pub struct TextureAssets {
@@ -41,7 +41,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     fonts.push(asset_server.load_untyped(PATHS.fira_sans));
 
     let mut audio: Vec<HandleUntyped> = vec![];
-    audio.push(asset_server.load_untyped(PATHS.audio_flying));
+    audio.push(asset_server.load_untyped(PATHS.audio_fall));
 
     let texture_names = [
         "box",
@@ -109,7 +109,7 @@ fn check_state(
     });
 
     commands.insert_resource(AudioAssets {
-        flying: asset_server.get_handle(PATHS.audio_flying),
+        fall: asset_server.get_handle(PATHS.audio_fall),
     });
 
     commands.insert_resource(TextureAssets {
