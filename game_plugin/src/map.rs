@@ -171,7 +171,7 @@ impl Map {
         match self {
             Map::Ground => vec![ActiveElement::Button {
                 position: self.tiled_slot_to_bevy_slot(Slot { row: 7, column: 5 }),
-                connected_wall: self.tiled_slot_to_bevy_slot(Slot { row: 10, column: 8 }),
+                connected_wall: self.tiled_slot_to_bevy_slot(Slot { row: 10, column: 7 }),
             }],
             _ => vec![],
         }
@@ -362,7 +362,11 @@ fn draw_active_elements(
                     )),
                     ..Default::default()
                 })
-                .insert(element.clone());
+                .insert(element.clone())
+                .insert(Collide {
+                    x: connected_wall.column,
+                    y: connected_wall.row,
+                });
         }
     }
 }
