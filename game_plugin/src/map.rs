@@ -9,6 +9,7 @@ use tiled::PropertyValue::BoolValue;
 
 pub const TILE_SIZE: f32 = 64.;
 pub const ACTIVE_ELEMENT_Z: f32 = 2.;
+pub const ACORN_Z: f32 = 1.;
 
 #[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
 pub enum MapSystemLabels {
@@ -68,6 +69,8 @@ pub struct Collide {
     pub y: usize,
 }
 
+pub struct Acorn;
+
 #[derive(Clone)]
 pub enum Map {
     Ground,
@@ -114,6 +117,18 @@ impl Map {
         }
     }
 
+    pub fn acorn_position(&self) -> (f32, f32) {
+        match self {
+            Map::Ground => self.position_from_slot(Slot { column: 8, row: 10 }),
+            Map::Dirt => self.position_from_slot(Slot { column: 10, row: 8 }),
+            Map::Stone => self.position_from_slot(Slot { column: 14, row: 7 }),
+            Map::Lava => self.position_from_slot(Slot {
+                column: 17,
+                row: 15,
+            }),
+        }
+    }
+
     pub fn dimensions(&self) -> Dimensions {
         match self {
             Map::Ground => Dimensions {
@@ -151,23 +166,29 @@ impl Map {
     }
 
     pub fn intro_scene(&self, window: &Window) -> Option<CutScene> {
+        let camera_from = calc_camera_position(
+            self.start_position().0,
+            self.start_position().1,
+            window,
+            &self.dimensions(),
+        );
+        let camera_to = calc_camera_position(
+            self.goal_position().0,
+            self.goal_position().1,
+            window,
+            &self.dimensions(),
+        );
         match self {
-            _ => {
-                let from = calc_camera_position(
-                    self.start_position().0,
-                    self.start_position().1,
-                    window,
-                    &self.dimensions(),
-                );
-                let to = calc_camera_position(
-                    self.goal_position().0,
-                    self.goal_position().1,
-                    window,
-                    &self.dimensions(),
-                );
-
-                Some(CutScene::Intro { from, to })
-            }
+            Map::Lava => Some(CutScene::Intro {
+                camera_from,
+                camera_to,
+                acorn_falls: false,
+            }),
+            _ => Some(CutScene::Intro {
+                camera_from,
+                camera_to,
+                acorn_falls: true,
+            }),
         }
     }
 
@@ -280,6 +301,7 @@ fn draw_map(
     current_map: Res<Map>,
     asset_server: Res<AssetServer>,
     windows: Res<Windows>,
+    texture_assets: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut trigger_scene: EventWriter<TriggerScene>,
     tiles: Query<Entity, With<MapTile>>,
@@ -327,6 +349,18 @@ fn draw_map(
             }
         }
     }
+    let acorn_position = current_map.acorn_position();
+    commands
+        .spawn_bundle(SpriteBundle {
+            material: materials.add(texture_assets.texture_acorn.clone().into()),
+            transform: Transform::from_translation(Vec3::new(
+                acorn_position.0,
+                acorn_position.1,
+                ACORN_Z,
+            )),
+            ..Default::default()
+        })
+        .insert(Acorn);
     let window = windows.get_primary().expect("No primary window");
     if let Some(scene) = current_map.intro_scene(window) {
         trigger_scene.send(TriggerScene { scene });

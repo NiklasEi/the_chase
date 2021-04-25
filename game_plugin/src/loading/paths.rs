@@ -5,6 +5,7 @@ pub struct AssetPaths {
     pub audio_wall_moving: &'static str,
     pub audio_happy_background: &'static str,
     pub texture_player: &'static str,
+    pub texture_acorn: &'static str,
     pub texture_button: &'static str,
     pub texture_button_active: &'static str,
 }
@@ -16,6 +17,7 @@ pub const PATHS: AssetPaths = AssetPaths {
     audio_wall_moving: "audio/wall_moving.ogg",
     audio_happy_background: "audio/happy_background.ogg",
     texture_player: "textures/player.png",
+    texture_acorn: "textures/acorn.png",
     texture_button: "textures/button.png",
     texture_button_active: "textures/button_active.png",
 };
