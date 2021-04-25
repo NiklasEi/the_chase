@@ -31,6 +31,7 @@ pub struct MapData {
     width: usize,
 }
 
+#[derive(Debug)]
 pub struct Slot {
     pub column: usize,
     pub row: usize,
@@ -84,11 +85,11 @@ impl Map {
         }
     }
 
-    pub fn goal_slot(&self) -> Slot {
+    pub fn goal_position(&self) -> (f32, f32) {
         match self {
-            Map::Ground => Slot { column: 9, row: 10 },
-            Map::Dirt => Slot { column: 5, row: 1 },
-            Map::Stone => Slot { column: 5, row: 1 },
+            Map::Ground => self.position_from_slot(Slot { column: 9, row: 10 }),
+            Map::Dirt => self.position_from_slot(Slot { column: 5, row: 1 }),
+            Map::Stone => self.position_from_slot(Slot { column: 5, row: 1 }),
         }
     }
 
@@ -120,6 +121,14 @@ impl Map {
     pub fn intro_scene(&self) -> Option<CutScene> {
         match self {
             Map::Ground => Some(CutScene::GroundIntro),
+            Map::Dirt => None,
+            Map::Stone => None,
+        }
+    }
+
+    pub fn goal_scene(&self) -> Option<CutScene> {
+        match self {
+            Map::Ground => Some(CutScene::GroundToDirt),
             Map::Dirt => None,
             Map::Stone => None,
         }

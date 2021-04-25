@@ -1,9 +1,10 @@
 use crate::map::Map;
-use crate::player::{calc_camera_position, PlayerCamera};
+use crate::player::{calc_camera_position, Player, PlayerCamera};
 use crate::{GameStage, GameState};
 use bevy::ecs::schedule::ShouldRun;
 use bevy::ecs::world::WorldCell;
 use bevy::prelude::*;
+use bevy::render::camera::OrthographicProjection;
 use std::time::Duration;
 
 pub struct ScenesPlugin;
@@ -15,6 +16,7 @@ pub struct TriggerScene {
 #[derive(Clone, PartialEq)]
 pub enum CutScene {
     GroundIntro,
+    GroundToDirt,
 }
 
 impl Plugin for ScenesPlugin {
@@ -22,6 +24,7 @@ impl Plugin for ScenesPlugin {
         app.add_event::<TriggerScene>().add_system_set(
             SystemSet::on_update(GameStage::Playing)
                 .with_system(run_ground_intro.system())
+                .with_system(run_ground_to_dirt.system())
                 .with_system(trigger_scene.system()),
         );
     }
@@ -74,7 +77,7 @@ fn run_ground_intro(
         return;
     }
 
-    let goal_point = Map::Ground.position_from_slot(Map::Ground.goal_slot());
+    let goal_point = Map::Ground.goal_position();
     let (x_goal, y_goal) = calc_camera_position(
         goal_point.0,
         goal_point.1,
@@ -112,6 +115,44 @@ fn run_ground_intro(
         transform.translation.x += to_animate.x;
         transform.translation.y += to_animate.y;
     }
+}
+
+fn run_ground_to_dirt(
+    mut game_state: ResMut<GameState>,
+    time: Res<Time>,
+    mut current_map: ResMut<Map>,
+    mut player: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
+    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
+) {
+    if let Some(scene) = &game_state.scene {
+        if scene != &CutScene::GroundToDirt {
+            return;
+        }
+    } else {
+        return;
+    }
+    let camera_scale_offset: Vec3 = Vec3::new(-0.95, -0.95, 0.);
+    let player_scale_offset: Vec3 = Vec3::new(-0.9, -0.9, 0.);
+    const ZOOM: Duration = Duration::from_secs(1);
+
+    if time
+        .time_since_startup()
+        .lt(&(game_state.scene_start + ZOOM))
+    {
+        if let Ok(mut transform) = camera.single_mut() {
+            transform.scale +=
+                (camera_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
+        }
+        if let Ok(mut transform) = player.single_mut() {
+            transform.scale +=
+                (player_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
+        }
+        return;
+    }
+    *current_map = Map::Dirt;
+    game_state.scene = None;
+    game_state.frozen = false;
+    return;
 }
 
 fn trigger_scene(

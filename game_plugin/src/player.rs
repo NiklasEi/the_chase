@@ -1,6 +1,7 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::map::{Collide, Dimensions, Map, MapSystemLabels, TILE_SIZE};
+use crate::scenes::TriggerScene;
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
 
@@ -70,6 +71,7 @@ fn move_player(
     game_state: Res<GameState>,
     actions: Res<Actions>,
     map: Res<Map>,
+    mut trigger_scene: EventWriter<TriggerScene>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     collider_query: Query<&Collide>,
 ) {
@@ -96,6 +98,16 @@ fn move_player(
             }
         }
         player_transform.translation += movement;
+        if player_transform.translation.distance(Vec3::new(
+            map.goal_position().0,
+            map.goal_position().1,
+            1.,
+        )) < 20.
+        {
+            if let Some(scene) = map.goal_scene() {
+                trigger_scene.send(TriggerScene { scene });
+            }
+        }
     }
 }
 
@@ -111,6 +123,7 @@ fn reset_player_position(
         if let Ok(mut player_transform) = player_query.single_mut() {
             player_transform.translation.x = spawn_position.0;
             player_transform.translation.y = spawn_position.1;
+            player_transform.scale = Vec3::new(1., 1., 1.);
         }
         if let Ok(mut camera_transform) = camera_query.single_mut() {
             let (x, y) = calc_camera_position(
@@ -121,6 +134,7 @@ fn reset_player_position(
             );
             camera_transform.translation.x = x;
             camera_transform.translation.y = y;
+            camera_transform.scale = Vec3::new(1., 1., 1.);
         }
     }
 }
