@@ -1,10 +1,7 @@
 use crate::map::Map;
-use crate::player::{calc_camera_position, Player, PlayerCamera};
+use crate::player::{Player, PlayerCamera};
 use crate::{GameStage, GameState};
-use bevy::ecs::schedule::ShouldRun;
-use bevy::ecs::world::WorldCell;
 use bevy::prelude::*;
-use bevy::render::camera::OrthographicProjection;
 use std::time::Duration;
 
 pub struct ScenesPlugin;

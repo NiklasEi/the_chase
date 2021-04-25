@@ -87,11 +87,12 @@ fn move_player(
         actions.player_movement.unwrap().y * speed * time.delta_seconds(),
         0.,
     );
+    let player_bounds = movement.normalize() * 8.;
     for mut player_transform in player_query.iter_mut() {
-        let x =
-            ((player_transform.translation.x + movement.x + TILE_SIZE / 2.) / TILE_SIZE) as usize;
-        let y =
-            ((player_transform.translation.y + movement.y + TILE_SIZE / 2.) / TILE_SIZE) as usize;
+        let x = ((player_transform.translation.x + movement.x + player_bounds.x + TILE_SIZE / 2.)
+            / TILE_SIZE) as usize;
+        let y = ((player_transform.translation.y + movement.y + player_bounds.y + TILE_SIZE / 2.)
+            / TILE_SIZE) as usize;
         if x >= map.dimensions().columns || y >= map.dimensions().rows {
             return;
         }
@@ -108,7 +109,7 @@ fn move_player(
         )) < 20.
         {
             if let Some(scene) = map.goal_scene() {
-                if let CutScene::MapTransition { to } = &scene {
+                if let CutScene::MapTransition { to: _to } = &scene {
                     audio_effect.send(AudioEffect {
                         handle: audio_assets.fall.clone(),
                     })
