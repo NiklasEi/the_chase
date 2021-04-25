@@ -1,3 +1,4 @@
+use crate::loading::TextureAssets;
 use crate::player::calc_camera_position;
 use crate::scenes::{CutScene, TriggerScene};
 use crate::{GameStage, TiledMap};
@@ -7,6 +8,7 @@ use tiled::LayerData::Finite;
 use tiled::PropertyValue::BoolValue;
 
 pub const TILE_SIZE: f32 = 64.;
+pub const ACTIVE_ELEMENT_Z: f32 = 2.;
 
 #[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
 pub enum MapSystemLabels {
@@ -17,11 +19,17 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(Map::Ground).add_system_set(
-            SystemSet::on_update(GameStage::Playing)
-                .label(MapSystemLabels::DrawMap)
-                .with_system(load_map.system().chain(draw_map.system())),
-        );
+        app.insert_resource(Map::Ground)
+            .add_system_set(
+                SystemSet::on_update(GameStage::Playing)
+                    .label(MapSystemLabels::DrawMap)
+                    .with_system(load_map.system().chain(draw_map.system())),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameStage::Playing)
+                    .with_system(draw_active_elements.system())
+                    .after(MapSystemLabels::DrawMap),
+            );
     }
 }
 
@@ -32,7 +40,7 @@ pub struct MapData {
     width: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Slot {
     pub column: usize,
     pub row: usize,
@@ -115,6 +123,13 @@ impl Map {
         }
     }
 
+    pub fn tiled_slot_to_bevy_slot(&self, slot: Slot) -> Slot {
+        Slot {
+            column: slot.column,
+            row: self.dimensions().rows - slot.row - 1,
+        }
+    }
+
     pub fn position_from_slot(&self, slot: Slot) -> (f32, f32) {
         let dimensions = self.dimensions();
         (
@@ -151,6 +166,24 @@ impl Map {
             Map::Stone => None,
         }
     }
+
+    pub fn active_elements(&self) -> Vec<ActiveElement> {
+        match self {
+            Map::Ground => vec![ActiveElement::Button {
+                position: self.tiled_slot_to_bevy_slot(Slot { row: 7, column: 5 }),
+                connected_wall: self.tiled_slot_to_bevy_slot(Slot { row: 10, column: 8 }),
+            }],
+            _ => vec![],
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum ActiveElement {
+    Button {
+        position: Slot,
+        connected_wall: Slot,
+    },
 }
 
 fn load_map(current_map: Res<Map>, maps: Res<Assets<TiledMap>>) -> Option<MapData> {
@@ -283,5 +316,53 @@ fn draw_map(
     let window = windows.get_primary().expect("No primary window");
     if let Some(scene) = current_map.intro_scene(window) {
         trigger_scene.send(TriggerScene { scene });
+    }
+}
+
+fn draw_active_elements(
+    mut commands: Commands,
+    current_map: Res<Map>,
+    asset_server: Res<AssetServer>,
+    elements: Query<Entity, With<ActiveElement>>,
+    textures: Res<TextureAssets>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    if !current_map.is_added() && !current_map.is_changed() {
+        return;
+    }
+    for entity in elements.iter() {
+        commands.entity(entity).despawn();
+    }
+    let active_elements = current_map.active_elements();
+    for element in active_elements {
+        if let ActiveElement::Button {
+            position,
+            connected_wall,
+        } = element.clone()
+        {
+            commands
+                .spawn_bundle(SpriteBundle {
+                    material: materials.add(textures.texture_button.clone().into()),
+                    transform: Transform::from_translation(Vec3::new(
+                        position.column as f32 * TILE_SIZE,
+                        position.row as f32 * TILE_SIZE,
+                        ACTIVE_ELEMENT_Z,
+                    )),
+                    ..Default::default()
+                })
+                .insert(element.clone());
+            commands
+                .spawn_bundle(SpriteBundle {
+                    material: materials
+                        .add(asset_server.get_handle("textures/stonewall.png").into()),
+                    transform: Transform::from_translation(Vec3::new(
+                        connected_wall.column as f32 * TILE_SIZE,
+                        connected_wall.row as f32 * TILE_SIZE,
+                        ACTIVE_ELEMENT_Z,
+                    )),
+                    ..Default::default()
+                })
+                .insert(element.clone());
+        }
     }
 }

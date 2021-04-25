@@ -11,6 +11,8 @@ pub struct PlayerPlugin;
 pub struct Player;
 pub struct PlayerCamera;
 
+pub const PLAYER_Z: f32 = 5.;
+
 #[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
 pub enum PlayerSystemLabels {
     MovePlayer,
@@ -60,7 +62,7 @@ fn spawn_player(
             transform: Transform::from_translation(Vec3::new(
                 spawn_position.0,
                 spawn_position.1,
-                1.,
+                PLAYER_Z,
             )),
             ..Default::default()
         })
@@ -105,7 +107,7 @@ fn move_player(
         if player_transform.translation.distance(Vec3::new(
             map.goal_position().0,
             map.goal_position().1,
-            1.,
+            PLAYER_Z,
         )) < 20.
         {
             if let Some(scene) = map.goal_scene() {

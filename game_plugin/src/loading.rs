@@ -34,6 +34,8 @@ pub struct AudioAssets {
 
 pub struct TextureAssets {
     pub texture_player: Handle<Texture>,
+    pub texture_button: Handle<Texture>,
+    pub texture_button_active: Handle<Texture>,
 }
 
 fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -46,20 +48,22 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     let texture_names = [
         "box",
         "dirtexit",
-        "dirtpath",
+        "dirtfloor",
         "dirtwall",
         "groundexit",
-        "groundpath",
+        "groundfloor",
         "groundwall",
         "lavaexit",
-        "lavapath",
+        "lavafloor",
         "lavawall",
         "stoneexit",
-        "stonepath",
+        "stonefloor",
         "stonewall",
     ];
     let mut textures: Vec<HandleUntyped> = vec![];
     textures.push(asset_server.load_untyped(PATHS.texture_player));
+    textures.push(asset_server.load_untyped(PATHS.texture_button));
+    textures.push(asset_server.load_untyped(PATHS.texture_button_active));
     for name in &texture_names {
         textures.push(asset_server.load_untyped(&format!("textures/{}.png", name)[..]));
     }
@@ -114,6 +118,8 @@ fn check_state(
 
     commands.insert_resource(TextureAssets {
         texture_player: asset_server.get_handle(PATHS.texture_player),
+        texture_button: asset_server.get_handle(PATHS.texture_button),
+        texture_button_active: asset_server.get_handle(PATHS.texture_button_active),
     });
 
     state.set(GameStage::Menu).unwrap();
