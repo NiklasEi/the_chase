@@ -6,8 +6,6 @@ use bevy::ecs::world::WorldCell;
 use bevy::prelude::*;
 use std::time::Duration;
 
-pub struct GroundIntro;
-
 pub struct ScenesPlugin;
 
 pub struct TriggerScene {

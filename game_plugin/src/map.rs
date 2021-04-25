@@ -17,7 +17,7 @@ pub struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(Map::Ground).add_system_set(
-            SystemSet::on_enter(GameStage::Playing)
+            SystemSet::on_update(GameStage::Playing)
                 .label(MapSystemLabels::DrawMap)
                 .with_system(load_map.system().chain(draw_map.system())),
         );
@@ -127,6 +127,9 @@ impl Map {
 }
 
 fn load_map(current_map: Res<Map>, maps: Res<Assets<TiledMap>>) -> Option<MapData> {
+    if !current_map.is_added() && !current_map.is_changed() {
+        return None;
+    }
     if let Some(map) = maps.get(&current_map.file()[..]) {
         let map = &map.map;
         let mut path_map: HashMap<u32, String> = HashMap::default();
@@ -204,8 +207,15 @@ fn draw_map(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut trigger_scene: EventWriter<TriggerScene>,
+    tiles: Query<Entity, With<MapTile>>,
 ) {
-    let map_data: MapData = map_data.0.expect("There is no map O.o");
+    if map_data.0.is_none() {
+        return;
+    }
+    for entity in tiles.iter() {
+        commands.entity(entity).despawn();
+    }
+    let map_data: MapData = map_data.0.unwrap();
     for (layer_index, layer) in map_data.layers.iter().enumerate() {
         let collide = map_data
             .colliding_layers

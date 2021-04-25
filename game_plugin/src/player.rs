@@ -24,6 +24,7 @@ impl Plugin for PlayerPlugin {
         )
         .add_system_set(
             SystemSet::on_update(GameStage::Playing)
+                .with_system(reset_player_position.system())
                 .with_system(move_player.system().label(PlayerSystemLabels::MovePlayer))
                 .with_system(move_camera.system().after(PlayerSystemLabels::MovePlayer)),
         )
@@ -75,7 +76,7 @@ fn move_player(
     if actions.player_movement.is_none() || game_state.frozen {
         return;
     }
-    let speed = 150.;
+    let speed = 250.;
     let movement = Vec3::new(
         actions.player_movement.unwrap().x * speed * time.delta_seconds(),
         actions.player_movement.unwrap().y * speed * time.delta_seconds(),
@@ -95,6 +96,32 @@ fn move_player(
             }
         }
         player_transform.translation += movement;
+    }
+}
+
+fn reset_player_position(
+    current_map: Res<Map>,
+    windows: Res<Windows>,
+    mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
+    mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
+) {
+    if current_map.is_changed() {
+        let window = windows.get_primary().expect("No primary window");
+        let spawn_position: (f32, f32) = current_map.position_from_slot(current_map.start_slot());
+        if let Ok(mut player_transform) = player_query.single_mut() {
+            player_transform.translation.x = spawn_position.0;
+            player_transform.translation.y = spawn_position.1;
+        }
+        if let Ok(mut camera_transform) = camera_query.single_mut() {
+            let (x, y) = calc_camera_position(
+                spawn_position.0,
+                spawn_position.1,
+                window,
+                &current_map.dimensions(),
+            );
+            camera_transform.translation.x = x;
+            camera_transform.translation.y = y;
+        }
     }
 }
 
