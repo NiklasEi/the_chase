@@ -1,7 +1,7 @@
-use crate::GameStage;
-use bevy::prelude::*;
 use crate::audio::BackgroundAudio;
 use crate::loading::AudioAssets;
+use crate::GameStage;
+use bevy::prelude::*;
 
 pub struct MenuPlugin;
 
@@ -37,9 +37,11 @@ fn setup_menu(
     asset_server: Res<AssetServer>,
     button_materials: Res<ButtonMaterials>,
     audio_assets: Res<AudioAssets>,
-    mut background_audio: EventWriter<BackgroundAudio>
+    mut background_audio: EventWriter<BackgroundAudio>,
 ) {
-    background_audio.send(BackgroundAudio {handle: audio_assets.happy_background.clone()});
+    background_audio.send(BackgroundAudio {
+        handle: audio_assets.happy_background.clone(),
+    });
     commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(ButtonBundle {

@@ -32,7 +32,7 @@ pub struct AudioAssets {
     pub fall: Handle<AudioSource>,
     pub button_click: Handle<AudioSource>,
     pub wall_moving: Handle<AudioSource>,
-pub happy_background: Handle<AudioSource>
+    pub happy_background: Handle<AudioSource>,
 }
 
 pub struct TextureAssets {

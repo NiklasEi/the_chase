@@ -4,6 +4,7 @@ use crate::map::{Collide, Dimensions, Map, MapSystemLabels, TILE_SIZE};
 use crate::scenes::TriggerScene;
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
+use std::f32::consts::PI;
 
 pub struct PlayerPlugin;
 
@@ -88,6 +89,13 @@ fn move_player(
     );
     let player_bounds = movement.normalize() * 8.;
     for mut player_transform in player_query.iter_mut() {
+        player_transform.rotation = Quat::from_rotation_z(
+            -1. * actions
+                .player_movement
+                .unwrap()
+                .angle_between(Vec2::new(0., 1.))
+                + PI,
+        );
         let x = ((player_transform.translation.x + movement.x + player_bounds.x + TILE_SIZE / 2.)
             / TILE_SIZE) as usize;
         let y = ((player_transform.translation.y + movement.y + player_bounds.y + TILE_SIZE / 2.)

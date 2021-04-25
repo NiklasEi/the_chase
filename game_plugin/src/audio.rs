@@ -1,7 +1,7 @@
+use crate::loading::AudioAssets;
 use crate::GameStage;
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin, AudioSource};
-use crate::loading::AudioAssets;
 
 pub struct InternalAudioPlugin;
 
@@ -12,16 +12,18 @@ impl Plugin for InternalAudioPlugin {
             background: AudioChannel::new("background".to_owned()),
         })
         .add_plugin(AudioPlugin)
-            .add_event::<AudioEffect>()
-            .add_event::<BackgroundAudio>()
-            .add_event::<ResumeBackground>()
-            .add_event::<PauseBackground>()
+        .add_event::<AudioEffect>()
+        .add_event::<BackgroundAudio>()
+        .add_event::<ResumeBackground>()
+        .add_event::<PauseBackground>()
         .add_system_set(SystemSet::on_enter(GameStage::Menu).with_system(start_audio.system()))
-        .add_system_set(SystemSet::new()
-            .with_system(play_effect.system())
-            .with_system(play_background.system())
-            .with_system(resume_background.system())
-            .with_system(pause_background.system()))
+        .add_system_set(
+            SystemSet::new()
+                .with_system(play_effect.system())
+                .with_system(play_background.system())
+                .with_system(resume_background.system())
+                .with_system(pause_background.system()),
+        )
         .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(stop_audio.system()));
     }
 }
@@ -39,7 +41,7 @@ pub struct AudioEffect {
 
 struct AudioChannels {
     effects: AudioChannel,
-    background: AudioChannel
+    background: AudioChannel,
 }
 
 fn start_audio(audio: Res<Audio>, channels: Res<AudioChannels>) {
