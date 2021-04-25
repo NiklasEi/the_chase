@@ -58,6 +58,7 @@ pub struct Collide {
     pub y: usize,
 }
 
+#[derive(Clone)]
 pub enum Map {
     Ground,
     Dirt,
@@ -128,7 +129,7 @@ impl Map {
 
     pub fn goal_scene(&self) -> Option<CutScene> {
         match self {
-            Map::Ground => Some(CutScene::GroundToDirt),
+            Map::Ground => Some(CutScene::MapTransition { to: Map::Dirt }),
             Map::Dirt => None,
             Map::Stone => None,
         }
