@@ -73,6 +73,7 @@ pub enum Map {
     Ground,
     Dirt,
     Stone,
+    Lava,
 }
 
 impl Map {
@@ -85,6 +86,7 @@ impl Map {
             Map::Ground => "ground",
             Map::Dirt => "dirt",
             Map::Stone => "stone",
+            Map::Lava => "lava",
         }
     }
 
@@ -96,6 +98,7 @@ impl Map {
                 row: 16,
             }),
             Map::Stone => self.position_from_slot(Slot { column: 7, row: 12 }),
+            Map::Lava => self.position_from_slot(Slot { column: 1, row: 18 }),
         }
     }
 
@@ -104,6 +107,10 @@ impl Map {
             Map::Ground => self.position_from_slot(Slot { column: 9, row: 10 }),
             Map::Dirt => self.position_from_slot(Slot { column: 12, row: 8 }),
             Map::Stone => self.position_from_slot(Slot { column: 14, row: 5 }),
+            Map::Lava => self.position_from_slot(Slot {
+                column: 17,
+                row: 17,
+            }),
         }
     }
 
@@ -118,6 +125,10 @@ impl Map {
                 rows: 20,
             },
             Map::Stone => Dimensions {
+                columns: 20,
+                rows: 20,
+            },
+            Map::Lava => Dimensions {
                 columns: 20,
                 rows: 20,
             },
@@ -164,7 +175,8 @@ impl Map {
         match self {
             Map::Ground => Some(CutScene::MapTransition { to: Map::Dirt }),
             Map::Dirt => Some(CutScene::MapTransition { to: Map::Stone }),
-            Map::Stone => None,
+            Map::Stone => Some(CutScene::MapTransition { to: Map::Lava }),
+            Map::Lava => None,
         }
     }
 

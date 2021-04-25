@@ -78,6 +78,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     maps.push(asset_server.load_untyped("map/ground.tmx"));
     maps.push(asset_server.load_untyped("map/dirt.tmx"));
     maps.push(asset_server.load_untyped("map/stone.tmx"));
+    maps.push(asset_server.load_untyped("map/lava.tmx"));
 
     commands.insert_resource(LoadingState {
         textures,
