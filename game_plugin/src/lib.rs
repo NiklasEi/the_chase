@@ -19,6 +19,7 @@ use crate::scenes::{CutScene, ScenesPlugin};
 use anyhow::Result;
 use bevy::asset::{AssetLoader, AssetServerSettings, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
+use bevy::utils::Duration;
 use bevy_reflect::TypeUuid;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -62,6 +63,7 @@ impl Plugin for GamePlugin {
 pub struct GameState {
     pub frozen: bool,
     pub scene: Option<CutScene>,
+    pub scene_start: Duration,
 }
 
 impl Default for GameState {
@@ -69,6 +71,7 @@ impl Default for GameState {
         Self {
             frozen: false,
             scene: None,
+            scene_start: Duration::from_nanos(0),
         }
     }
 }

@@ -125,7 +125,7 @@ fn move_camera(
     }
 }
 
-fn calc_camera_position(
+pub fn calc_camera_position(
     mut x: f32,
     mut y: f32,
     window: &Window,

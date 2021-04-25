@@ -1,3 +1,4 @@
+use crate::scenes::{CutScene, TriggerScene};
 use crate::{GameStage, TiledMap};
 use bevy::prelude::*;
 use std::collections::HashMap;
@@ -115,6 +116,14 @@ impl Map {
             (dimensions.rows - slot.row - 1) as f32 * TILE_SIZE,
         )
     }
+
+    pub fn intro_scene(&self) -> Option<CutScene> {
+        match self {
+            Map::Ground => Some(CutScene::GroundIntro),
+            Map::Dirt => None,
+            Map::Stone => None,
+        }
+    }
 }
 
 fn load_map(current_map: Res<Map>, maps: Res<Assets<TiledMap>>) -> Option<MapData> {
@@ -191,8 +200,10 @@ fn load_map(current_map: Res<Map>, maps: Res<Assets<TiledMap>>) -> Option<MapDat
 fn draw_map(
     map_data: In<Option<MapData>>,
     mut commands: Commands,
+    current_map: Res<Map>,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut trigger_scene: EventWriter<TriggerScene>,
 ) {
     let map_data: MapData = map_data.0.expect("There is no map O.o");
     for (layer_index, layer) in map_data.layers.iter().enumerate() {
@@ -230,5 +241,8 @@ fn draw_map(
                 }
             }
         }
+    }
+    if let Some(scene) = current_map.intro_scene() {
+        trigger_scene.send(TriggerScene { scene });
     }
 }
