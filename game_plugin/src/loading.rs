@@ -32,6 +32,7 @@ pub struct AudioAssets {
     pub fall: Handle<AudioSource>,
     pub button_click: Handle<AudioSource>,
     pub wall_moving: Handle<AudioSource>,
+pub happy_background: Handle<AudioSource>
 }
 
 pub struct TextureAssets {
@@ -48,6 +49,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     audio.push(asset_server.load_untyped(PATHS.audio_fall));
     audio.push(asset_server.load_untyped(PATHS.audio_button_click));
     audio.push(asset_server.load_untyped(PATHS.audio_wall_moving));
+    audio.push(asset_server.load_untyped(PATHS.audio_happy_background));
 
     let texture_names = [
         "box",
@@ -120,6 +122,7 @@ fn check_state(
         fall: asset_server.get_handle(PATHS.audio_fall),
         button_click: asset_server.get_handle(PATHS.audio_button_click),
         wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
+        happy_background: asset_server.get_handle(PATHS.audio_happy_background),
     });
 
     commands.insert_resource(TextureAssets {

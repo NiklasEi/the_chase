@@ -1,4 +1,4 @@
-use crate::audio::AudioEffect;
+use crate::audio::{AudioEffect, PauseBackground, ResumeBackground};
 use crate::loading::AudioAssets;
 use crate::map::{ActiveElement, Collide, Map};
 use crate::player::{Player, PlayerCamera};
@@ -111,6 +111,7 @@ fn run_transition_scene(
     mut current_map: ResMut<Map>,
     mut audio_effect: EventWriter<AudioEffect>,
     audio_assets: Res<AudioAssets>,
+    mut pause_background: EventWriter<PauseBackground>,
     mut player: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
@@ -118,6 +119,7 @@ fn run_transition_scene(
         if let CutScene::MapTransition { to } = scene {
             if game_state.scene_step == 0 {
                 game_state.scene_step += 1;
+                pause_background.send(PauseBackground);
                 audio_effect.send(AudioEffect {
                     handle: audio_assets.fall.clone(),
                 })
@@ -154,6 +156,8 @@ fn run_activate_button_scene(
     time: Res<Time>,
     mut audio_effect: EventWriter<AudioEffect>,
     audio_assets: Res<AudioAssets>,
+    mut pause_background: EventWriter<PauseBackground>,
+    mut resume_background: EventWriter<ResumeBackground>,
     elements: Query<(Entity, &Transform), (With<ActiveElement>, Without<PlayerCamera>)>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<ActiveElement>)>,
 ) {
@@ -161,6 +165,7 @@ fn run_activate_button_scene(
         if let CutScene::ActivateButton { button, wall } = scene {
             if game_state.scene_step == 0 {
                 game_state.scene_step += 1;
+                pause_background.send(PauseBackground);
                 audio_effect.send(AudioEffect {
                     handle: audio_assets.button_click.clone(),
                 })
@@ -181,6 +186,7 @@ fn run_activate_button_scene(
                 .time_since_startup()
                 .gt(&(game_state.scene_start + CAMERA_BACK_TO_PLAYER))
             {
+                resume_background.send(ResumeBackground);
                 if let Ok(mut transform) = camera.single_mut() {
                     transform.translation.x = button.0;
                     transform.translation.y = button.1;
