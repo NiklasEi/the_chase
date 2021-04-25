@@ -1,7 +1,7 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::map::{Collide, Map, MapSystemLabels, TILE_SIZE};
-use crate::GameStage;
+use crate::{GameStage, GameState};
 use bevy::prelude::*;
 
 pub struct PlayerPlugin;
@@ -63,12 +63,13 @@ fn spawn_player(
 
 fn move_player(
     time: Res<Time>,
+    game_state: Res<GameState>,
     actions: Res<Actions>,
     map: Res<Map>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     collider_query: Query<&Collide>,
 ) {
-    if actions.player_movement.is_none() {
+    if actions.player_movement.is_none() || game_state.frozen {
         return;
     }
     let speed = 150.;
@@ -96,10 +97,15 @@ fn move_player(
 
 fn move_camera(
     map: Res<Map>,
+    game_state: Res<GameState>,
+    actions: Res<Actions>,
     windows: Res<Windows>,
     player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
     mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
+    if actions.player_movement.is_none() || game_state.frozen {
+        return;
+    }
     if let Ok(player_transform) = player_query.single() {
         let window = windows.get_primary().expect("No primary window");
         let x_min = window.width() / 2. - TILE_SIZE / 2.;
