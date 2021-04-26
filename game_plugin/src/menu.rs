@@ -1,5 +1,7 @@
 use crate::audio::BackgroundAudio;
-use crate::loading::AudioAssets;
+use crate::loading::{AudioAssets, TextureAssets};
+use crate::map::TILE_SIZE;
+use crate::player::PlayerCamera;
 use crate::GameStage;
 use bevy::prelude::*;
 
@@ -31,12 +33,15 @@ impl FromWorld for ButtonMaterials {
 }
 
 struct PlayButton;
+struct Menu;
 
 fn setup_menu(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     button_materials: Res<ButtonMaterials>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     audio_assets: Res<AudioAssets>,
+    texture_assets: Res<TextureAssets>,
     mut background_audio: EventWriter<BackgroundAudio>,
 ) {
     background_audio.send(BackgroundAudio {
@@ -46,6 +51,30 @@ fn setup_menu(
         ],
     });
     commands.spawn_bundle(UiCameraBundle::default());
+    commands
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .insert(PlayerCamera);
+    commands
+        .spawn_bundle(SpriteBundle {
+            material: materials.add(texture_assets.texture_menu.clone().into()),
+            transform: Transform::from_translation(Vec3::new(TILE_SIZE / 2., TILE_SIZE / 2., 1.)),
+            ..Default::default()
+        })
+        .insert(Menu);
+    commands
+        .spawn_bundle(SpriteBundle {
+            material: materials.add(texture_assets.texture_player.clone().into()),
+            transform: Transform::from_translation(Vec3::new(2. * TILE_SIZE, 2. * TILE_SIZE, 2.)),
+            ..Default::default()
+        })
+        .insert(Menu);
+    commands
+        .spawn_bundle(SpriteBundle {
+            material: materials.add(texture_assets.texture_acorn.clone().into()),
+            transform: Transform::from_translation(Vec3::new(-2. * TILE_SIZE, -2. * TILE_SIZE, 2.)),
+            ..Default::default()
+        })
+        .insert(Menu);
     commands
         .spawn_bundle(ButtonBundle {
             style: Style {
@@ -90,11 +119,15 @@ fn click_play_button(
     mut state: ResMut<State<GameStage>>,
     mut interaction_query: Query<ButtonInteraction, (Changed<Interaction>, With<Button>)>,
     text_query: Query<Entity, With<Text>>,
+    menu_query: Query<Entity, With<Menu>>,
 ) {
     for (button, interaction, mut material, children) in interaction_query.iter_mut() {
         let text = text_query.get(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
+                for entity in menu_query.iter() {
+                    commands.entity(entity).despawn();
+                }
                 commands.entity(button).despawn();
                 commands.entity(text).despawn();
                 state.set(GameStage::Playing).unwrap();

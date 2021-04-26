@@ -48,6 +48,7 @@ pub struct TextureAssets {
     pub texture_button_down: Handle<Texture>,
     pub texture_wall_up: Handle<Texture>,
     pub texture_wall_down: Handle<Texture>,
+    pub texture_menu: Handle<Texture>,
 }
 
 fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -86,6 +87,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     textures.push(asset_server.load_untyped(PATHS.texture_acorn));
     textures.push(asset_server.load_untyped(PATHS.texture_wall_up));
     textures.push(asset_server.load_untyped(PATHS.texture_wall_down));
+    textures.push(asset_server.load_untyped(PATHS.texture_menu));
     for name in &texture_names {
         textures.push(asset_server.load_untyped(&format!("textures/{}.png", name)[..]));
     }
@@ -155,6 +157,7 @@ fn check_state(
         texture_acorn: asset_server.get_handle(PATHS.texture_acorn),
         texture_wall_up: asset_server.get_handle(PATHS.texture_wall_up),
         texture_wall_down: asset_server.get_handle(PATHS.texture_wall_down),
+        texture_menu: asset_server.get_handle(PATHS.texture_menu),
     });
 
     state.set(GameStage::Menu).unwrap();

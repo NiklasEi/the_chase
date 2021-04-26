@@ -25,8 +25,7 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_enter(GameStage::Playing)
                 .after(MapSystemLabels::DrawMap)
-                .with_system(spawn_player.system())
-                .with_system(spawn_camera.system()),
+                .with_system(spawn_player.system()),
         )
         .add_system_set(
             SystemSet::on_update(GameStage::Playing)
@@ -36,19 +35,6 @@ impl Plugin for PlayerPlugin {
         )
         .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(remove_player.system()));
     }
-}
-
-fn spawn_camera(mut commands: Commands, current_map: Res<Map>, windows: Res<Windows>) {
-    let (x, y) = current_map.start_position();
-    let window = windows.get_primary().expect("No primary window");
-    let (x, y) = calc_camera_position(x, y, window, &current_map.dimensions());
-
-    commands
-        .spawn_bundle(OrthographicCameraBundle {
-            transform: Transform::from_xyz(x, y, 1000. - 0.1),
-            ..OrthographicCameraBundle::new_2d()
-        })
-        .insert(PlayerCamera);
 }
 
 fn spawn_player(

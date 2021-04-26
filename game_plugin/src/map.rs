@@ -448,54 +448,53 @@ fn draw_active_elements(
     }
     let active_elements = current_map.active_elements();
     for element in active_elements {
-        if let ActiveElement::Button {
+        let ActiveElement::Button {
             position,
             connected_wall,
-        } = element.clone()
-        {
-            let button_slot = current_map.tiled_slot_to_bevy_slot(position.clone());
-            let connected_wall_slot = current_map.tiled_slot_to_bevy_slot(connected_wall.clone());
-            let button = commands
-                .spawn_bundle(SpriteBundle {
-                    material: materials.add(textures.texture_button_up.clone().into()),
-                    transform: Transform::from_translation(Vec3::new(
-                        button_slot.column as f32 * TILE_SIZE,
-                        button_slot.row as f32 * TILE_SIZE,
-                        ACTIVE_ELEMENT_Z,
-                    )),
-                    ..Default::default()
-                })
-                .id();
-            commands.entity(button).insert(Trigger);
-            let wall = commands
-                .spawn_bundle(SpriteBundle {
-                    material: materials.add(textures.texture_wall_up.clone().into()),
-                    transform: Transform::from_translation(Vec3::new(
-                        connected_wall_slot.column as f32 * TILE_SIZE,
-                        connected_wall_slot.row as f32 * TILE_SIZE,
-                        ACTIVE_ELEMENT_Z,
-                    )),
-                    ..Default::default()
-                })
-                .id();
-            commands.entity(wall).insert(Collide {
-                x: connected_wall_slot.column,
-                y: connected_wall_slot.row,
-            });
+        } = element.clone();
 
-            commands.entity(wall).insert(ButtonWall {
-                button: button.clone(),
-                wall: wall.clone(),
-                button_slot: position.clone(),
-                wall_slot: connected_wall.clone(),
-            });
-            commands.entity(button).insert(ButtonWall {
-                button: button.clone(),
-                wall: wall.clone(),
-                button_slot: position.clone(),
-                wall_slot: connected_wall.clone(),
-            });
-        }
+        let button_slot = current_map.tiled_slot_to_bevy_slot(position.clone());
+        let connected_wall_slot = current_map.tiled_slot_to_bevy_slot(connected_wall.clone());
+        let button = commands
+            .spawn_bundle(SpriteBundle {
+                material: materials.add(textures.texture_button_up.clone().into()),
+                transform: Transform::from_translation(Vec3::new(
+                    button_slot.column as f32 * TILE_SIZE,
+                    button_slot.row as f32 * TILE_SIZE,
+                    ACTIVE_ELEMENT_Z,
+                )),
+                ..Default::default()
+            })
+            .id();
+        commands.entity(button).insert(Trigger);
+        let wall = commands
+            .spawn_bundle(SpriteBundle {
+                material: materials.add(textures.texture_wall_up.clone().into()),
+                transform: Transform::from_translation(Vec3::new(
+                    connected_wall_slot.column as f32 * TILE_SIZE,
+                    connected_wall_slot.row as f32 * TILE_SIZE,
+                    ACTIVE_ELEMENT_Z,
+                )),
+                ..Default::default()
+            })
+            .id();
+        commands.entity(wall).insert(Collide {
+            x: connected_wall_slot.column,
+            y: connected_wall_slot.row,
+        });
+
+        commands.entity(wall).insert(ButtonWall {
+            button: button.clone(),
+            wall: wall.clone(),
+            button_slot: position.clone(),
+            wall_slot: connected_wall.clone(),
+        });
+        commands.entity(button).insert(ButtonWall {
+            button: button.clone(),
+            wall: wall.clone(),
+            button_slot: position.clone(),
+            wall_slot: connected_wall.clone(),
+        });
     }
 }
 
