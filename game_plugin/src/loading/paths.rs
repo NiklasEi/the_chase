@@ -1,6 +1,7 @@
 pub struct AssetPaths {
     pub fira_sans: &'static str,
     pub audio_fall: &'static str,
+    pub audio_won: &'static str,
     pub audio_button_click: &'static str,
     pub audio_wall_moving: &'static str,
     pub audio_ground_background: &'static str,
@@ -8,6 +9,7 @@ pub struct AssetPaths {
     pub audio_dirt_background: &'static str,
     pub audio_stone_background: &'static str,
     pub audio_lava_background: &'static str,
+    pub audio_lava_background_effects: &'static str,
     pub texture_player: &'static str,
     pub texture_acorn: &'static str,
     pub texture_button: &'static str,
@@ -19,6 +21,7 @@ pub struct AssetPaths {
 pub const PATHS: AssetPaths = AssetPaths {
     fira_sans: "fonts/FiraSans-Bold.ttf",
     audio_fall: "audio/fall.ogg",
+    audio_won: "audio/won.ogg",
     audio_button_click: "audio/button_click.ogg",
     audio_wall_moving: "audio/wall_moving.ogg",
     audio_ground_background: "audio/happy_background.ogg",
@@ -26,6 +29,7 @@ pub const PATHS: AssetPaths = AssetPaths {
     audio_dirt_background: "audio/dirt_background.ogg",
     audio_stone_background: "audio/stone_background.ogg",
     audio_lava_background: "audio/lava_background.ogg",
+    audio_lava_background_effects: "audio/lava_effects.ogg",
     texture_player: "textures/player.png",
     texture_acorn: "textures/acorn.png",
     texture_button: "textures/button.png",

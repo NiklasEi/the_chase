@@ -1,0 +1,30 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="lava_effects_data" version="1.3.0" audacityversion="2.4.2" sel0="6.3274376417" sel1="6.3274376417" vpos="0" h="0.0000000000" zoom="86.1328125000" rate="44100.0" snapto="off" selectionformat="hh:mm:ss + milliseconds" frequencyformat="Hz" bandwidthformat="octaves">
+	<tags/>
+	<wavetrack name="Audio Track" isSelected="0" height="150" minimized="0" channel="2" linked="0" mute="0" solo="0" rate="44100" gain="1.0" pan="0.0" colorindex="0">
+		<waveclip offset="0.00000000" colorindex="0">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="1263621">
+				<waveblock start="0">
+					<simpleblockfile filename="eff1f0af.au" len="262144" min="-0.080902" max="0.057587" rms="0.003567"/>
+				</waveblock>
+				<waveblock start="262144">
+					<simpleblockfile filename="eff1f701.au" len="262144" min="-0.014557" max="0.016418" rms="0.00124"/>
+				</waveblock>
+				<waveblock start="524288">
+					<simpleblockfile filename="eff1f091.au" len="262144" min="-0.011749" max="0.013824" rms="0.001023"/>
+				</waveblock>
+				<waveblock start="786432">
+					<simpleblockfile filename="eff1f154.au" len="211456" min="-0.043121" max="0.041718" rms="0.00181"/>
+				</waveblock>
+				<waveblock start="997888">
+					<simpleblockfile filename="eff1f849.au" len="262144" min="-0.028503" max="0.025757" rms="0.000619"/>
+				</waveblock>
+				<waveblock start="1260032">
+					<simpleblockfile filename="eff1f61e.au" len="3589" min="-0.002014" max="0.001312" rms="0.000264"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+</project>

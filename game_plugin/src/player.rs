@@ -162,7 +162,10 @@ fn reset_player_position(
                 handles: vec![audio_assets.stone_background.clone()],
             }),
             Map::Lava => background_audio.send(BackgroundAudio {
-                handles: vec![audio_assets.lava_background.clone()],
+                handles: vec![
+                    audio_assets.lava_background.clone(),
+                    audio_assets.lava_background_effects.clone(),
+                ],
             }),
             _ => (),
         }

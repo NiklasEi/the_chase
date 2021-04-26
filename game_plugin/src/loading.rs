@@ -38,6 +38,7 @@ pub struct AudioAssets {
     pub dirt_background: Handle<AudioSource>,
     pub stone_background: Handle<AudioSource>,
     pub lava_background: Handle<AudioSource>,
+    pub lava_background_effects: Handle<AudioSource>,
 }
 
 pub struct TextureAssets {
@@ -55,6 +56,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let mut audio: Vec<HandleUntyped> = vec![];
     audio.push(asset_server.load_untyped(PATHS.audio_fall));
+    audio.push(asset_server.load_untyped(PATHS.audio_won));
     audio.push(asset_server.load_untyped(PATHS.audio_button_click));
     audio.push(asset_server.load_untyped(PATHS.audio_wall_moving));
     audio.push(asset_server.load_untyped(PATHS.audio_ground_background));
@@ -62,6 +64,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     audio.push(asset_server.load_untyped(PATHS.audio_dirt_background));
     audio.push(asset_server.load_untyped(PATHS.audio_stone_background));
     audio.push(asset_server.load_untyped(PATHS.audio_lava_background));
+    audio.push(asset_server.load_untyped(PATHS.audio_lava_background_effects));
 
     let texture_names = [
         "dirtexit",
@@ -134,7 +137,7 @@ fn check_state(
 
     commands.insert_resource(AudioAssets {
         fall: asset_server.get_handle(PATHS.audio_fall),
-        won: asset_server.get_handle(PATHS.audio_fall),
+        won: asset_server.get_handle(PATHS.audio_won),
         button_click: asset_server.get_handle(PATHS.audio_button_click),
         wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
         ground_background: asset_server.get_handle(PATHS.audio_ground_background),
@@ -142,6 +145,7 @@ fn check_state(
         dirt_background: asset_server.get_handle(PATHS.audio_dirt_background),
         stone_background: asset_server.get_handle(PATHS.audio_stone_background),
         lava_background: asset_server.get_handle(PATHS.audio_lava_background),
+        lava_background_effects: asset_server.get_handle(PATHS.audio_lava_background_effects),
     });
 
     commands.insert_resource(TextureAssets {
