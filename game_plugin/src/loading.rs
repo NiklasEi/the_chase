@@ -33,6 +33,8 @@ pub struct AudioAssets {
     pub won: Handle<AudioSource>,
     pub button_click: Handle<AudioSource>,
     pub wall_moving: Handle<AudioSource>,
+    pub no_no: Handle<AudioSource>,
+    pub puh: Handle<AudioSource>,
     pub ground_background: Handle<AudioSource>,
     pub ground_background_effects: Handle<AudioSource>,
     pub dirt_background: Handle<AudioSource>,
@@ -58,6 +60,8 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut audio: Vec<HandleUntyped> = vec![];
     audio.push(asset_server.load_untyped(PATHS.audio_fall));
     audio.push(asset_server.load_untyped(PATHS.audio_won));
+    audio.push(asset_server.load_untyped(PATHS.audio_no_no));
+    audio.push(asset_server.load_untyped(PATHS.audio_puh));
     audio.push(asset_server.load_untyped(PATHS.audio_button_click));
     audio.push(asset_server.load_untyped(PATHS.audio_wall_moving));
     audio.push(asset_server.load_untyped(PATHS.audio_ground_background));
@@ -140,6 +144,8 @@ fn check_state(
     commands.insert_resource(AudioAssets {
         fall: asset_server.get_handle(PATHS.audio_fall),
         won: asset_server.get_handle(PATHS.audio_won),
+        no_no: asset_server.get_handle(PATHS.audio_no_no),
+        puh: asset_server.get_handle(PATHS.audio_puh),
         button_click: asset_server.get_handle(PATHS.audio_button_click),
         wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
         ground_background: asset_server.get_handle(PATHS.audio_ground_background),

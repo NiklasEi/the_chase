@@ -71,7 +71,7 @@ pub struct Collide {
 
 pub struct Acorn;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Map {
     Ground,
     Dirt,

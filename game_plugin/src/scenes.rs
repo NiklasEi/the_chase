@@ -6,6 +6,7 @@ use crate::player::{Player, PlayerCamera};
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
 use std::f32::consts::PI;
+use std::ops::Deref;
 use std::time::Duration;
 
 pub struct ScenesPlugin;
@@ -51,6 +52,8 @@ impl Plugin for ScenesPlugin {
 fn run_intro(
     mut commands: Commands,
     mut game_state: ResMut<GameState>,
+    audio_assets: Res<AudioAssets>,
+    mut audio_effect: EventWriter<AudioEffect>,
     current_map: Res<Map>,
     actions: Res<Actions>,
     time: Res<Time>,
@@ -65,7 +68,7 @@ fn run_intro(
         } = scene
         {
             if actions.scip_scene {
-                if game_state.scene_step == 0 && acorn_falls {
+                if acorn_falls {
                     if let Ok((acorn, _acorn_transform)) = acorn.single_mut() {
                         commands.entity(acorn).despawn();
                     }
@@ -80,8 +83,13 @@ fn run_intro(
             }
             const CAMERA_ON_PLAYER: Duration = Duration::from_millis(500);
             const CAMERA_TO_GOAL: Duration = Duration::from_millis(1500);
-            const CAMERA_ON_GOAL: Duration = Duration::from_millis(2500);
-            const CAMERA_BACK_TO_PLAYER: Duration = Duration::from_millis(3500);
+            let mut camera_on_goal: Duration = Duration::from_millis(2500);
+            let mut camera_back_to_player: Duration = Duration::from_millis(3500);
+
+            if current_map.deref() == &Map::Lava {
+                camera_on_goal = Duration::from_millis(5500);
+                camera_back_to_player = Duration::from_millis(6500);
+            }
 
             if time
                 .time_since_startup()
@@ -92,8 +100,13 @@ fn run_intro(
 
             if time
                 .time_since_startup()
-                .gt(&(game_state.scene_start + CAMERA_BACK_TO_PLAYER))
+                .gt(&(game_state.scene_start + camera_back_to_player))
             {
+                if acorn_falls {
+                    if let Ok((acorn, _acorn_transform)) = acorn.single_mut() {
+                        commands.entity(acorn).despawn();
+                    }
+                }
                 if let Ok(mut transform) = camera.single_mut() {
                     transform.translation.x = camera_from.0;
                     transform.translation.y = camera_from.1;
@@ -108,25 +121,39 @@ fn run_intro(
                 .gt(&(game_state.scene_start + CAMERA_TO_GOAL))
                 && time
                     .time_since_startup()
-                    .lt(&(game_state.scene_start + CAMERA_ON_GOAL))
+                    .lt(&(game_state.scene_start + camera_on_goal))
             {
                 if let Ok((_acorn, mut acorn_transform)) = acorn.single_mut() {
                     let goal = current_map.goal_position();
                     let acorn = current_map.acorn_position();
-                    let time_delta = (CAMERA_ON_GOAL - CAMERA_TO_GOAL).as_secs_f32() / 2.;
+                    let time_delta = (camera_on_goal - CAMERA_TO_GOAL).as_secs_f32() / 2.;
                     let mut partial = (2.
-                        - ((game_state.scene_start + CAMERA_ON_GOAL - time.time_since_startup())
+                        - ((game_state.scene_start + camera_on_goal - time.time_since_startup())
                             .as_secs_f32()
                             / time_delta))
                         .clamp(0., 2.);
-                    if !acorn_falls {
+                    if !acorn_falls && current_map.deref() != &Map::Lava {
                         partial /= 2.;
                     }
                     if partial < 1. {
+                        if current_map.deref() == &Map::Lava && game_state.scene_step == 0 {
+                            audio_effect.send(AudioEffect {
+                                handle: audio_assets.no_no.clone(),
+                            });
+                            game_state.scene_step += 1;
+                        }
                         let acorn_path =
                             (Vec2::new(goal.0, goal.1) - Vec2::new(acorn.0, acorn.1)) * partial;
                         acorn_transform.translation.x = acorn.0 + acorn_path.x;
                         acorn_transform.translation.y = acorn.1 + acorn_path.y;
+                    } else if current_map.deref() == &Map::Lava {
+                        let over = if partial < 1.33 {
+                            Vec2::from(goal) + Vec2::new(0., -16.) * ((partial - 1.) * 3.)
+                        } else {
+                            Vec2::from(goal) + Vec2::new(0., -16.) * (1. - ((partial - 1.33) * 1.5))
+                        };
+                        acorn_transform.translation.x = over.x;
+                        acorn_transform.translation.y = over.y;
                     } else {
                         acorn_transform.rotation = Quat::from_rotation_z(partial * 2. * PI);
                         acorn_transform.scale *= 0.95;
@@ -139,17 +166,16 @@ fn run_intro(
                 return;
             }
 
-            if game_state.scene_step == 0
+            if current_map.deref() == &Map::Lava
+                && game_state.scene_step == 1
                 && time
                     .time_since_startup()
-                    .gt(&(game_state.scene_start + CAMERA_ON_GOAL))
+                    .gt(&(game_state.scene_start + camera_on_goal))
             {
+                audio_effect.send(AudioEffect {
+                    handle: audio_assets.puh.clone(),
+                });
                 game_state.scene_step += 1;
-                if acorn_falls {
-                    if let Ok((acorn, _acorn_transform)) = acorn.single_mut() {
-                        commands.entity(acorn).despawn();
-                    }
-                }
             }
 
             let to_animate = if time
@@ -161,7 +187,7 @@ fn run_intro(
                     * time.delta().as_secs_f32()
             } else {
                 (Vec2::new(camera_from.0 - camera_to.0, camera_from.1 - camera_to.1)
-                    / (CAMERA_BACK_TO_PLAYER - CAMERA_ON_GOAL).as_secs_f32())
+                    / (camera_back_to_player - camera_on_goal).as_secs_f32())
                     * time.delta().as_secs_f32()
             };
             if let Ok(mut transform) = camera.single_mut() {
