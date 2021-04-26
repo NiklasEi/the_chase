@@ -1,9 +1,7 @@
 use crate::actions::Actions;
-use crate::audio::{
-    AudioEffect, BackgroundAudio, PauseBackground, ResumeBackground, StopAudioEffects,
-};
+use crate::audio::{AudioEffect, BackgroundAudio, PauseBackground, StopAudioEffects};
 use crate::loading::{AudioAssets, TextureAssets};
-use crate::map::{Acorn, ActiveElement, Collide, Map};
+use crate::map::{Acorn, ButtonWall, Collide, Map};
 use crate::player::{Player, PlayerCamera};
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
@@ -25,8 +23,9 @@ pub enum CutScene {
     },
     ActivateButton {
         button: Entity,
-        player: (f32, f32),
-        wall: (f32, f32),
+        wall: Entity,
+        camera_from: (f32, f32),
+        camera_to: (f32, f32),
     },
     MapTransition {
         camera_from: (f32, f32),
@@ -309,27 +308,25 @@ fn run_activate_button_scene(
     mut audio_effect: EventWriter<AudioEffect>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     audio_assets: Res<AudioAssets>,
-    mut pause_background: EventWriter<PauseBackground>,
-    mut resume_background: EventWriter<ResumeBackground>,
     mut elements: Query<
         (Entity, &Transform, &mut Handle<ColorMaterial>),
-        (With<ActiveElement>, Without<PlayerCamera>),
+        (With<ButtonWall>, Without<PlayerCamera>),
     >,
-    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<ActiveElement>)>,
+    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<ButtonWall>)>,
 ) {
     if let Some(scene) = game_state.scene.clone() {
         if let CutScene::ActivateButton {
             button,
-            player,
             wall,
+            camera_from,
+            camera_to,
         } = scene
         {
             if actions.scip_scene {
                 stop_audio_effects.send(StopAudioEffects);
-                resume_background.send(ResumeBackground);
                 if let Ok(mut transform) = camera.single_mut() {
-                    transform.translation.x = player.0;
-                    transform.translation.y = player.1;
+                    transform.translation.x = camera_from.0;
+                    transform.translation.y = camera_from.1;
                 }
                 game_state.scene = None;
                 game_state.frozen = false;
@@ -338,17 +335,17 @@ fn run_activate_button_scene(
                         *material = materials.add(textures.texture_button_down.clone().into());
                     }
                     for (entity, transform, mut material) in elements.iter_mut() {
-                        if transform.translation.x == wall.0 && transform.translation.y == wall.1 {
+                        if transform.translation.x == camera_to.0
+                            && transform.translation.y == camera_to.1
+                        {
                             *material = materials.add(textures.texture_wall_down.clone().into());
                             commands.entity(entity).remove::<Collide>();
                         }
                     }
                 } else if game_state.scene_step < 3 {
-                    for (entity, transform, mut material) in elements.iter_mut() {
-                        if transform.translation.x == wall.0 && transform.translation.y == wall.1 {
-                            *material = materials.add(textures.texture_wall_down.clone().into());
-                            commands.entity(entity).remove::<Collide>();
-                        }
+                    if let Ok((entity, _transform, mut material)) = elements.get_mut(wall) {
+                        *material = materials.add(textures.texture_wall_down.clone().into());
+                        commands.entity(entity).remove::<Collide>();
                     }
                 }
                 return;
@@ -358,15 +355,14 @@ fn run_activate_button_scene(
                 if let Ok((_entity, _transform, mut material)) = elements.get_mut(button) {
                     *material = materials.add(textures.texture_button_down.clone().into());
                 }
-                pause_background.send(PauseBackground);
                 audio_effect.send(AudioEffect {
                     handle: audio_assets.button_click.clone(),
                 })
             }
             const CAMERA_ON_PLAYER: Duration = Duration::from_millis(300);
             const CAMERA_TO_WALL: Duration = Duration::from_millis(1000);
-            const CAMERA_ON_WALL: Duration = Duration::from_millis(1300);
-            const CAMERA_BACK_TO_PLAYER: Duration = Duration::from_millis(2000);
+            const CAMERA_ON_WALL: Duration = Duration::from_millis(1500);
+            const CAMERA_BACK_TO_PLAYER: Duration = Duration::from_millis(2200);
 
             if time
                 .time_since_startup()
@@ -379,10 +375,9 @@ fn run_activate_button_scene(
                 .time_since_startup()
                 .gt(&(game_state.scene_start + CAMERA_BACK_TO_PLAYER))
             {
-                resume_background.send(ResumeBackground);
                 if let Ok(mut transform) = camera.single_mut() {
-                    transform.translation.x = player.0;
-                    transform.translation.y = player.1;
+                    transform.translation.x = camera_from.0;
+                    transform.translation.y = camera_from.1;
                 }
                 game_state.scene = None;
                 game_state.frozen = false;
@@ -403,19 +398,17 @@ fn run_activate_button_scene(
                     })
                 }
                 if let Ok(mut transform) = camera.single_mut() {
-                    transform.translation.x = wall.0;
-                    transform.translation.y = wall.1;
+                    transform.translation.x = camera_to.0;
+                    transform.translation.y = camera_to.1;
                 }
                 return;
             }
 
             if game_state.scene_step == 2 {
                 game_state.scene_step += 1;
-                for (entity, transform, mut material) in elements.iter_mut() {
-                    if transform.translation.x == wall.0 && transform.translation.y == wall.1 {
-                        *material = materials.add(textures.texture_wall_down.clone().into());
-                        commands.entity(entity).remove::<Collide>();
-                    }
+                if let Ok((entity, _transform, mut material)) = elements.get_mut(wall) {
+                    *material = materials.add(textures.texture_wall_down.clone().into());
+                    commands.entity(entity).remove::<Collide>();
                 }
             }
 
@@ -423,11 +416,11 @@ fn run_activate_button_scene(
                 .time_since_startup()
                 .lt(&(CAMERA_TO_WALL + game_state.scene_start))
             {
-                (Vec2::new(wall.0 - player.0, wall.1 - player.1)
+                (Vec2::new(camera_to.0 - camera_from.0, camera_to.1 - camera_from.1)
                     / (CAMERA_TO_WALL - CAMERA_ON_PLAYER).as_secs_f32())
                     * time.delta().as_secs_f32()
             } else {
-                (Vec2::new(player.0 - wall.0, player.1 - wall.1)
+                (Vec2::new(camera_from.0 - camera_to.0, camera_from.1 - camera_to.1)
                     / (CAMERA_BACK_TO_PLAYER - CAMERA_ON_WALL).as_secs_f32())
                     * time.delta().as_secs_f32()
             };

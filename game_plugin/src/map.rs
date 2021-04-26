@@ -215,10 +215,16 @@ impl Map {
 
     pub fn active_elements(&self) -> Vec<ActiveElement> {
         match self {
-            Map::Ground => vec![ActiveElement::Button {
-                position: Slot { row: 7, column: 5 },
-                connected_wall: Slot { row: 10, column: 7 },
-            }],
+            Map::Ground => vec![
+                ActiveElement::Button {
+                    position: Slot { column: 5, row: 7 },
+                    connected_wall: Slot { column: 2, row: 17 },
+                },
+                ActiveElement::Button {
+                    position: Slot { column: 13, row: 9 },
+                    connected_wall: Slot { column: 7, row: 10 },
+                },
+            ],
             _ => vec![],
         }
     }
@@ -379,10 +385,17 @@ fn draw_map(
     }
 }
 
+pub struct ButtonWall {
+    button_slot: Slot,
+    wall_slot: Slot,
+    button: Entity,
+    wall: Entity,
+}
+
 fn draw_active_elements(
     mut commands: Commands,
     current_map: Res<Map>,
-    elements: Query<Entity, With<ActiveElement>>,
+    elements: Query<Entity, With<ButtonWall>>,
     textures: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
@@ -399,9 +412,9 @@ fn draw_active_elements(
             connected_wall,
         } = element.clone()
         {
-            let button_slot = current_map.tiled_slot_to_bevy_slot(position);
-            let connected_wall_slot = current_map.tiled_slot_to_bevy_slot(connected_wall);
-            commands
+            let button_slot = current_map.tiled_slot_to_bevy_slot(position.clone());
+            let connected_wall_slot = current_map.tiled_slot_to_bevy_slot(connected_wall.clone());
+            let button = commands
                 .spawn_bundle(SpriteBundle {
                     material: materials.add(textures.texture_button_up.clone().into()),
                     transform: Transform::from_translation(Vec3::new(
@@ -411,9 +424,9 @@ fn draw_active_elements(
                     )),
                     ..Default::default()
                 })
-                .insert(element.clone())
-                .insert(Trigger);
-            commands
+                .id();
+            commands.entity(button).insert(Trigger);
+            let wall = commands
                 .spawn_bundle(SpriteBundle {
                     material: materials.add(textures.texture_wall_up.clone().into()),
                     transform: Transform::from_translation(Vec3::new(
@@ -423,11 +436,24 @@ fn draw_active_elements(
                     )),
                     ..Default::default()
                 })
-                .insert(element.clone())
-                .insert(Collide {
-                    x: connected_wall_slot.column,
-                    y: connected_wall_slot.row,
-                });
+                .id();
+            commands.entity(wall).insert(Collide {
+                x: connected_wall_slot.column,
+                y: connected_wall_slot.row,
+            });
+
+            commands.entity(wall).insert(ButtonWall {
+                button: button.clone(),
+                wall: wall.clone(),
+                button_slot: position.clone(),
+                wall_slot: connected_wall.clone(),
+            });
+            commands.entity(button).insert(ButtonWall {
+                button: button.clone(),
+                wall: wall.clone(),
+                button_slot: position.clone(),
+                wall_slot: connected_wall.clone(),
+            });
         }
     }
 }
@@ -437,7 +463,7 @@ fn check_active_elements(
     current_map: Res<Map>,
     game_state: Res<GameState>,
     windows: Res<Windows>,
-    mut elements: Query<(Entity, &Transform, &ActiveElement), With<Trigger>>,
+    mut elements: Query<(Entity, &Transform, &ButtonWall), With<Trigger>>,
     player_query: Query<&Transform, With<Player>>,
     mut trigger_scene: EventWriter<TriggerScene>,
 ) {
@@ -454,31 +480,33 @@ fn check_active_elements(
                 < 25.
             {
                 commands.entity(entity).remove::<Trigger>();
-                if let ActiveElement::Button {
-                    position: _,
-                    connected_wall,
-                } = element
-                {
-                    let wall = current_map.position_from_slot(connected_wall.clone());
-                    let window = windows.get_primary().expect("No primary window");
-                    trigger_scene.send(TriggerScene {
-                        scene: CutScene::ActivateButton {
-                            button: entity,
-                            player: calc_camera_position(
-                                player_transform.translation.x,
-                                player_transform.translation.y,
-                                window,
-                                &current_map.dimensions(),
-                            ),
-                            wall: calc_camera_position(
-                                wall.0,
-                                wall.1,
-                                window,
-                                &current_map.dimensions(),
-                            ),
-                        },
-                    });
-                }
+                let ButtonWall {
+                    button_slot: _button_slot,
+                    wall_slot,
+                    button,
+                    wall,
+                } = element;
+
+                let wall_position = current_map.position_from_slot(wall_slot.clone());
+                let window = windows.get_primary().expect("No primary window");
+                trigger_scene.send(TriggerScene {
+                    scene: CutScene::ActivateButton {
+                        button: button.clone(),
+                        wall: wall.clone(),
+                        camera_from: calc_camera_position(
+                            player_transform.translation.x,
+                            player_transform.translation.y,
+                            window,
+                            &current_map.dimensions(),
+                        ),
+                        camera_to: calc_camera_position(
+                            wall_position.0,
+                            wall_position.1,
+                            window,
+                            &current_map.dimensions(),
+                        ),
+                    },
+                });
             }
         }
     }
