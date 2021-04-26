@@ -219,13 +219,13 @@ fn run_transition_scene(
                     let diff = ((Vec2::from(camera_to) - Vec2::from(camera_from))
                         / ZOOM.as_secs_f32())
                         * time.delta().as_secs_f32();
-                    camera_transform.translation.x += diff.x;
-                    camera_transform.translation.x += diff.y;
                     if let Ok(mut player_transform) = player.single_mut() {
                         player_transform.scale +=
                             (player_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
                         player_transform.translation.x += diff.x;
-                        player_transform.translation.x += diff.y;
+                        player_transform.translation.y += diff.y;
+                        camera_transform.translation.x = player_transform.translation.x;
+                        camera_transform.translation.y = player_transform.translation.y;
                     }
                 }
                 return;
