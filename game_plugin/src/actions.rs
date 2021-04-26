@@ -14,6 +14,7 @@ impl Plugin for ActionsPlugin {
 #[derive(Default)]
 pub struct Actions {
     pub player_movement: Option<Vec2>,
+    pub scip_scene: bool,
 }
 
 enum GameControl {
@@ -138,4 +139,5 @@ fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<
     } else {
         actions.player_movement = None;
     }
+    actions.scip_scene = keyboard_input.just_pressed(KeyCode::Space);
 }

@@ -15,12 +15,14 @@ impl Plugin for InternalAudioPlugin {
         .add_event::<BackgroundAudio>()
         .add_event::<ResumeBackground>()
         .add_event::<PauseBackground>()
+        .add_event::<StopAudioEffects>()
         .add_system_set(SystemSet::on_enter(GameStage::Menu).with_system(start_audio.system()))
         .add_system_set(
             SystemSet::new()
                 .with_system(play_effect.system())
                 .with_system(play_background.system())
                 .with_system(resume_background.system())
+                .with_system(stop_effect.system())
                 .with_system(pause_background.system()),
         )
         .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(stop_audio.system()));
@@ -29,6 +31,7 @@ impl Plugin for InternalAudioPlugin {
 
 pub struct PauseBackground;
 pub struct ResumeBackground;
+pub struct StopAudioEffects;
 
 pub struct BackgroundAudio {
     pub handle: Handle<AudioSource>,
@@ -59,6 +62,16 @@ fn play_effect(
 ) {
     for effect in events.iter() {
         audio.play_in_channel(effect.handle.clone(), &channels.effects)
+    }
+}
+
+fn stop_effect(
+    mut events: EventReader<StopAudioEffects>,
+    audio: Res<Audio>,
+    channels: Res<AudioChannels>,
+) {
+    for _event in events.iter() {
+        audio.stop_channel(&channels.effects);
     }
 }
 

@@ -6,7 +6,6 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 use tiled::LayerData::Finite;
 use tiled::PropertyValue::BoolValue;
-use std::f32::consts::PI;
 
 pub const TILE_SIZE: f32 = 64.;
 pub const ACTIVE_ELEMENT_Z: f32 = 2.;

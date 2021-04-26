@@ -1,4 +1,7 @@
-use crate::audio::{AudioEffect, PauseBackground, ResumeBackground};
+use crate::actions::Actions;
+use crate::audio::{
+    AudioEffect, BackgroundAudio, PauseBackground, ResumeBackground, StopAudioEffects,
+};
 use crate::loading::{AudioAssets, TextureAssets};
 use crate::map::{Acorn, ActiveElement, Collide, Map};
 use crate::player::{Player, PlayerCamera};
@@ -28,7 +31,7 @@ pub enum CutScene {
     MapTransition {
         to: Map,
     },
-    Won
+    Won,
 }
 
 impl Plugin for ScenesPlugin {
@@ -38,6 +41,7 @@ impl Plugin for ScenesPlugin {
                 .with_system(run_intro.system())
                 .with_system(run_transition_scene.system())
                 .with_system(run_activate_button_scene.system())
+                .with_system(run_won_scene.system())
                 .with_system(trigger_scene.system()),
         );
     }
@@ -47,6 +51,7 @@ fn run_intro(
     mut commands: Commands,
     mut game_state: ResMut<GameState>,
     current_map: Res<Map>,
+    actions: Res<Actions>,
     time: Res<Time>,
     mut acorn: Query<(Entity, &mut Transform), (With<Acorn>, Without<PlayerCamera>)>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Acorn>)>,
@@ -58,6 +63,20 @@ fn run_intro(
             acorn_falls,
         } = scene
         {
+            if actions.scip_scene {
+                if game_state.scene_step == 0 && acorn_falls {
+                    if let Ok((acorn, _acorn_transform)) = acorn.single_mut() {
+                        commands.entity(acorn).despawn();
+                    }
+                }
+                if let Ok(mut transform) = camera.single_mut() {
+                    transform.translation.x = camera_from.0;
+                    transform.translation.y = camera_from.1;
+                }
+                game_state.scene = None;
+                game_state.frozen = false;
+                return;
+            }
             const CAMERA_ON_PLAYER: Duration = Duration::from_millis(500);
             const CAMERA_TO_GOAL: Duration = Duration::from_millis(1500);
             const CAMERA_ON_GOAL: Duration = Duration::from_millis(2500);
@@ -155,8 +174,10 @@ fn run_intro(
 fn run_transition_scene(
     mut game_state: ResMut<GameState>,
     time: Res<Time>,
+    actions: Res<Actions>,
     mut current_map: ResMut<Map>,
     mut audio_effect: EventWriter<AudioEffect>,
+    mut stop_audio_effects: EventWriter<StopAudioEffects>,
     audio_assets: Res<AudioAssets>,
     mut pause_background: EventWriter<PauseBackground>,
     mut player: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
@@ -164,6 +185,13 @@ fn run_transition_scene(
 ) {
     if let Some(scene) = game_state.scene.clone() {
         if let CutScene::MapTransition { to } = scene {
+            if actions.scip_scene {
+                stop_audio_effects.send(StopAudioEffects);
+                *current_map = to.clone();
+                game_state.scene = None;
+                game_state.frozen = false;
+                return;
+            }
             if game_state.scene_step == 0 {
                 game_state.scene_step += 1;
                 pause_background.send(PauseBackground);
@@ -200,15 +228,27 @@ fn run_transition_scene(
 fn run_won_scene(
     mut game_state: ResMut<GameState>,
     time: Res<Time>,
+    actions: Res<Actions>,
     mut audio_effect: EventWriter<AudioEffect>,
     audio_assets: Res<AudioAssets>,
+    mut stop_audio_effects: EventWriter<StopAudioEffects>,
     mut pause_background: EventWriter<PauseBackground>,
+    mut background_audio: EventWriter<BackgroundAudio>,
     mut _player: Query<&mut Transform, (With<Player>, Without<PlayerCamera>, Without<Acorn>)>,
     mut acorn: Query<&mut Transform, (With<Acorn>, Without<PlayerCamera>, Without<Player>)>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>, Without<Acorn>)>,
 ) {
     if let Some(scene) = game_state.scene.clone() {
         if let CutScene::Won = scene {
+            if actions.scip_scene {
+                stop_audio_effects.send(StopAudioEffects);
+                background_audio.send(BackgroundAudio {
+                    handle: audio_assets.ground_background.clone(),
+                });
+                game_state.won = true;
+                game_state.scene = None;
+                return;
+            }
             if game_state.scene_step == 0 {
                 game_state.scene_step += 1;
                 pause_background.send(PauseBackground);
@@ -225,13 +265,17 @@ fn run_won_scene(
             {
                 if let Ok(mut camera_transform) = camera.single_mut() {
                     camera_transform.scale +=
-                        (camera_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
-                    if let Ok(mut acorn_transform) = acorn.single_mut() {
-                        camera_transform.translation = acorn_transform.translation * camera_transform.scale;
+                        (camera_scale / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
+                    if let Ok(acorn_transform) = acorn.single_mut() {
+                        camera_transform.translation =
+                            acorn_transform.translation * camera_transform.scale;
                     }
                 }
                 return;
             }
+            background_audio.send(BackgroundAudio {
+                handle: audio_assets.ground_background.clone(),
+            });
             game_state.won = true;
             game_state.scene = None;
             return;
@@ -241,9 +285,11 @@ fn run_won_scene(
 
 fn run_activate_button_scene(
     mut commands: Commands,
+    actions: Res<Actions>,
     mut game_state: ResMut<GameState>,
     time: Res<Time>,
     textures: Res<TextureAssets>,
+    mut stop_audio_effects: EventWriter<StopAudioEffects>,
     mut audio_effect: EventWriter<AudioEffect>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     audio_assets: Res<AudioAssets>,
@@ -262,6 +308,35 @@ fn run_activate_button_scene(
             wall,
         } = scene
         {
+            if actions.scip_scene {
+                stop_audio_effects.send(StopAudioEffects);
+                resume_background.send(ResumeBackground);
+                if let Ok(mut transform) = camera.single_mut() {
+                    transform.translation.x = player.0;
+                    transform.translation.y = player.1;
+                }
+                game_state.scene = None;
+                game_state.frozen = false;
+                if game_state.scene_step == 0 {
+                    if let Ok((_entity, _transform, mut material)) = elements.get_mut(button) {
+                        *material = materials.add(textures.texture_button_down.clone().into());
+                    }
+                    for (entity, transform, mut material) in elements.iter_mut() {
+                        if transform.translation.x == wall.0 && transform.translation.y == wall.1 {
+                            *material = materials.add(textures.texture_wall_down.clone().into());
+                            commands.entity(entity).remove::<Collide>();
+                        }
+                    }
+                } else if game_state.scene_step < 3 {
+                    for (entity, transform, mut material) in elements.iter_mut() {
+                        if transform.translation.x == wall.0 && transform.translation.y == wall.1 {
+                            *material = materials.add(textures.texture_wall_down.clone().into());
+                            commands.entity(entity).remove::<Collide>();
+                        }
+                    }
+                }
+                return;
+            }
             if game_state.scene_step == 0 {
                 game_state.scene_step += 1;
                 if let Ok((_entity, _transform, mut material)) = elements.get_mut(button) {
