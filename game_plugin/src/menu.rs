@@ -2,7 +2,7 @@ use crate::audio::BackgroundAudio;
 use crate::loading::{AudioAssets, TextureAssets};
 use crate::map::TILE_SIZE;
 use crate::player::PlayerCamera;
-use crate::GameStage;
+use crate::GameState;
 use bevy::prelude::*;
 
 pub struct MenuPlugin;
@@ -10,16 +10,16 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
-            .add_system_set(SystemSet::on_enter(GameStage::Menu).with_system(setup_menu.system()))
+            .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(setup_menu.system()))
             .add_system_set(
-                SystemSet::on_update(GameStage::Menu).with_system(click_play_button.system()),
+                SystemSet::on_update(GameState::Menu).with_system(click_play_button.system()),
             );
     }
 }
 
-struct ButtonMaterials {
-    normal: Handle<ColorMaterial>,
-    hovered: Handle<ColorMaterial>,
+pub struct ButtonMaterials {
+    pub normal: Handle<ColorMaterial>,
+    pub hovered: Handle<ColorMaterial>,
 }
 
 impl FromWorld for ButtonMaterials {
@@ -116,7 +116,7 @@ type ButtonInteraction<'a> = (
 fn click_play_button(
     mut commands: Commands,
     button_materials: Res<ButtonMaterials>,
-    mut state: ResMut<State<GameStage>>,
+    mut state: ResMut<State<GameState>>,
     mut interaction_query: Query<ButtonInteraction, (Changed<Interaction>, With<Button>)>,
     text_query: Query<Entity, With<Text>>,
     menu_query: Query<Entity, With<Menu>>,
@@ -130,7 +130,7 @@ fn click_play_button(
                 }
                 commands.entity(button).despawn();
                 commands.entity(text).despawn();
-                state.set(GameStage::Playing).unwrap();
+                state.set(GameState::Playing).unwrap();
             }
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();

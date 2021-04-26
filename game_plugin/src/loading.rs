@@ -1,7 +1,7 @@
 mod paths;
 
 use crate::loading::paths::PATHS;
-use crate::GameStage;
+use crate::GameState;
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy_kira_audio::AudioSource;
@@ -11,9 +11,9 @@ pub struct LoadingPlugin;
 impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
-            SystemSet::on_enter(GameStage::Loading).with_system(start_loading.system()),
+            SystemSet::on_enter(GameState::Loading).with_system(start_loading.system()),
         )
-        .add_system_set(SystemSet::on_update(GameStage::Loading).with_system(check_state.system()));
+        .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_state.system()));
     }
 }
 
@@ -112,7 +112,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn check_state(
     mut commands: Commands,
-    mut state: ResMut<State<GameStage>>,
+    mut state: ResMut<State<GameState>>,
     asset_server: Res<AssetServer>,
     loading_state: Res<LoadingState>,
 ) {
@@ -166,5 +166,5 @@ fn check_state(
         texture_menu: asset_server.get_handle(PATHS.texture_menu),
     });
 
-    state.set(GameStage::Menu).unwrap();
+    state.set(GameState::Menu).unwrap();
 }

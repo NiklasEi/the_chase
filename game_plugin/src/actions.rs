@@ -1,4 +1,4 @@
-use crate::GameStage;
+use crate::GameState;
 use bevy::prelude::*;
 
 pub struct ActionsPlugin;
@@ -6,7 +6,7 @@ pub struct ActionsPlugin;
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<Actions>().add_system_set(
-            SystemSet::on_update(GameStage::Playing).with_system(set_movement_actions.system()),
+            SystemSet::on_update(GameState::Playing).with_system(set_movement_actions.system()),
         );
     }
 }

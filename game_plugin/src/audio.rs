@@ -1,4 +1,4 @@
-use crate::GameStage;
+use crate::GameState;
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin, AudioSource};
 
@@ -16,7 +16,7 @@ impl Plugin for InternalAudioPlugin {
         .add_event::<ResumeBackground>()
         .add_event::<PauseBackground>()
         .add_event::<StopAudioEffects>()
-        .add_system_set(SystemSet::on_enter(GameStage::Menu).with_system(start_audio.system()))
+        .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(start_audio.system()))
         .add_system_set(
             SystemSet::new()
                 .with_system(play_effect.system())
@@ -25,7 +25,7 @@ impl Plugin for InternalAudioPlugin {
                 .with_system(stop_effect.system())
                 .with_system(pause_background.system()),
         )
-        .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(stop_audio.system()));
+        .add_system_set(SystemSet::on_exit(GameState::Playing).with_system(stop_audio.system()));
     }
 }
 

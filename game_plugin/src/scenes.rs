@@ -3,7 +3,8 @@ use crate::audio::{AudioEffect, BackgroundAudio, PauseBackground, StopAudioEffec
 use crate::loading::{AudioAssets, TextureAssets};
 use crate::map::{Acorn, ButtonWall, Collide, Map};
 use crate::player::{Player, PlayerCamera};
-use crate::{GameStage, GameState};
+use crate::ui::WonEvent;
+use crate::{GameData, GameState};
 use bevy::prelude::*;
 use std::f32::consts::PI;
 use std::ops::Deref;
@@ -39,7 +40,7 @@ pub enum CutScene {
 impl Plugin for ScenesPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_event::<TriggerScene>().add_system_set(
-            SystemSet::on_update(GameStage::Playing)
+            SystemSet::on_update(GameState::Playing)
                 .with_system(run_intro.system())
                 .with_system(run_transition_scene.system())
                 .with_system(run_activate_button_scene.system())
@@ -51,7 +52,7 @@ impl Plugin for ScenesPlugin {
 
 fn run_intro(
     mut commands: Commands,
-    mut game_state: ResMut<GameState>,
+    mut game_state: ResMut<GameData>,
     audio_assets: Res<AudioAssets>,
     mut audio_effect: EventWriter<AudioEffect>,
     current_map: Res<Map>,
@@ -71,6 +72,12 @@ fn run_intro(
                 if acorn_falls {
                     if let Ok((acorn, _acorn_transform)) = acorn.single_mut() {
                         commands.entity(acorn).despawn();
+                    }
+                } else {
+                    let goal = current_map.goal_position();
+                    if let Ok((_acorn, mut acorn_transform)) = acorn.single_mut() {
+                        acorn_transform.translation.x = goal.0;
+                        acorn_transform.translation.y = goal.1;
                     }
                 }
                 if let Ok(mut transform) = camera.single_mut() {
@@ -199,7 +206,7 @@ fn run_intro(
 }
 
 fn run_transition_scene(
-    mut game_state: ResMut<GameState>,
+    mut game_state: ResMut<GameData>,
     time: Res<Time>,
     actions: Res<Actions>,
     mut current_map: ResMut<Map>,
@@ -265,7 +272,7 @@ fn run_transition_scene(
 }
 
 fn run_won_scene(
-    mut game_state: ResMut<GameState>,
+    mut game_state: ResMut<GameData>,
     time: Res<Time>,
     actions: Res<Actions>,
     mut audio_effect: EventWriter<AudioEffect>,
@@ -273,6 +280,7 @@ fn run_won_scene(
     mut stop_audio_effects: EventWriter<StopAudioEffects>,
     mut pause_background: EventWriter<PauseBackground>,
     mut background_audio: EventWriter<BackgroundAudio>,
+    mut won: EventWriter<WonEvent>,
     mut _player: Query<&mut Transform, (With<Player>, Without<PlayerCamera>, Without<Acorn>)>,
     mut acorn: Query<&mut Transform, (With<Acorn>, Without<PlayerCamera>, Without<Player>)>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>, Without<Acorn>)>,
@@ -284,6 +292,7 @@ fn run_won_scene(
                 background_audio.send(BackgroundAudio {
                     handles: vec![audio_assets.ground_background.clone()],
                 });
+                won.send(WonEvent);
                 game_state.won = true;
                 game_state.scene = None;
                 return;
@@ -317,6 +326,7 @@ fn run_won_scene(
             background_audio.send(BackgroundAudio {
                 handles: vec![audio_assets.ground_background.clone()],
             });
+            won.send(WonEvent);
             game_state.won = true;
             game_state.scene = None;
             return;
@@ -327,7 +337,7 @@ fn run_won_scene(
 fn run_activate_button_scene(
     mut commands: Commands,
     actions: Res<Actions>,
-    mut game_state: ResMut<GameState>,
+    mut game_state: ResMut<GameData>,
     time: Res<Time>,
     textures: Res<TextureAssets>,
     mut stop_audio_effects: EventWriter<StopAudioEffects>,
@@ -461,7 +471,7 @@ fn run_activate_button_scene(
 fn trigger_scene(
     time: Res<Time>,
     mut trigger_scene: EventReader<TriggerScene>,
-    mut game_state: ResMut<GameState>,
+    mut game_state: ResMut<GameData>,
 ) {
     for event in trigger_scene.iter() {
         game_state.scene = Some(event.scene.clone());

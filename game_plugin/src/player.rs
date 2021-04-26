@@ -3,7 +3,7 @@ use crate::audio::BackgroundAudio;
 use crate::loading::{AudioAssets, TextureAssets};
 use crate::map::{Collide, Dimensions, Map, MapSystemLabels, TILE_SIZE};
 use crate::scenes::TriggerScene;
-use crate::{GameStage, GameState};
+use crate::{GameData, GameState};
 use bevy::prelude::*;
 use std::f32::consts::PI;
 use std::ops::Deref;
@@ -23,17 +23,17 @@ pub enum PlayerSystemLabels {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
-            SystemSet::on_enter(GameStage::Playing)
+            SystemSet::on_enter(GameState::Playing)
                 .after(MapSystemLabels::DrawMap)
                 .with_system(spawn_player.system()),
         )
         .add_system_set(
-            SystemSet::on_update(GameStage::Playing)
+            SystemSet::on_update(GameState::Playing)
                 .with_system(reset_player_position.system())
                 .with_system(move_player.system().label(PlayerSystemLabels::MovePlayer))
                 .with_system(move_camera.system().after(PlayerSystemLabels::MovePlayer)),
         )
-        .add_system_set(SystemSet::on_exit(GameStage::Playing).with_system(remove_player.system()));
+        .add_system_set(SystemSet::on_exit(GameState::Playing).with_system(remove_player.system()));
     }
 }
 
@@ -59,7 +59,7 @@ fn spawn_player(
 
 fn move_player(
     time: Res<Time>,
-    game_state: Res<GameState>,
+    game_state: Res<GameData>,
     actions: Res<Actions>,
     map: Res<Map>,
     mut trigger_scene: EventWriter<TriggerScene>,
@@ -153,14 +153,19 @@ fn reset_player_position(
                     audio_assets.lava_background_effects.clone(),
                 ],
             }),
-            _ => (),
+            Map::Ground => background_audio.send(BackgroundAudio {
+                handles: vec![
+                    audio_assets.ground_background.clone(),
+                    audio_assets.ground_background_effects.clone(),
+                ],
+            }),
         }
     }
 }
 
 fn move_camera(
     map: Res<Map>,
-    game_state: Res<GameState>,
+    game_state: Res<GameData>,
     actions: Res<Actions>,
     windows: Res<Windows>,
     player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,

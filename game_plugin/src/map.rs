@@ -1,7 +1,7 @@
 use crate::loading::TextureAssets;
 use crate::player::{calc_camera_position, Player};
 use crate::scenes::{CutScene, TriggerScene};
-use crate::{GameStage, GameState, TiledMap};
+use crate::{GameData, GameState, TiledMap};
 use bevy::prelude::*;
 use std::collections::HashMap;
 use tiled::LayerData::Finite;
@@ -22,12 +22,12 @@ impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(Map::Ground)
             .add_system_set(
-                SystemSet::on_update(GameStage::Playing)
+                SystemSet::on_update(GameState::Playing)
                     .label(MapSystemLabels::DrawMap)
                     .with_system(load_map.system().chain(draw_map.system())),
             )
             .add_system_set(
-                SystemSet::on_update(GameStage::Playing)
+                SystemSet::on_update(GameState::Playing)
                     .with_system(draw_active_elements.system())
                     .with_system(check_active_elements.system())
                     .after(MapSystemLabels::DrawMap),
@@ -501,7 +501,7 @@ fn draw_active_elements(
 fn check_active_elements(
     mut commands: Commands,
     current_map: Res<Map>,
-    game_state: Res<GameState>,
+    game_state: Res<GameData>,
     windows: Res<Windows>,
     mut elements: Query<(Entity, &Transform, &ButtonWall), With<Trigger>>,
     player_query: Query<&Transform, With<Player>>,
