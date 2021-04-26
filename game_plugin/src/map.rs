@@ -222,10 +222,51 @@ impl Map {
                 },
                 ActiveElement::Button {
                     position: Slot { column: 13, row: 9 },
-                    connected_wall: Slot { column: 7, row: 10 },
+                    connected_wall: Slot { column: 10, row: 6 },
                 },
             ],
-            _ => vec![],
+            Map::Dirt => vec![
+                ActiveElement::Button {
+                    position: Slot { column: 4, row: 14 },
+                    connected_wall: Slot { column: 18, row: 9 },
+                },
+                ActiveElement::Button {
+                    position: Slot { column: 8, row: 11 },
+                    connected_wall: Slot { column: 14, row: 2 },
+                },
+            ],
+            Map::Stone => vec![
+                ActiveElement::Button {
+                    position: Slot { column: 4, row: 16 },
+                    connected_wall: Slot { column: 7, row: 5 },
+                },
+                ActiveElement::Button {
+                    position: Slot {
+                        column: 17,
+                        row: 11,
+                    },
+                    connected_wall: Slot { column: 13, row: 3 },
+                },
+            ],
+            Map::Lava => vec![
+                ActiveElement::Button {
+                    position: Slot {
+                        column: 21,
+                        row: 14,
+                    },
+                    connected_wall: Slot {
+                        column: 22,
+                        row: 18,
+                    },
+                },
+                ActiveElement::Button {
+                    position: Slot { column: 8, row: 7 },
+                    connected_wall: Slot {
+                        column: 20,
+                        row: 16,
+                    },
+                },
+            ],
         }
     }
 }
