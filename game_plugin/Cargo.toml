@@ -1,7 +1,8 @@
 [package]
 name = "game_plugin"
 version = "0.1.0"
-authors = ["Niklas Eicker <git@nikl.me>"] # ToDo: you are the author ;)
+publish = false
+authors = ["Niklas Eicker <git@nikl.me>", "Sirconplus"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
