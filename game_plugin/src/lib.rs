@@ -62,6 +62,7 @@ impl Plugin for GamePlugin {
 
 pub struct GameState {
     pub frozen: bool,
+    pub won: bool,
     pub scene: Option<CutScene>,
     pub scene_start: Duration,
     pub scene_step: u16,
@@ -70,6 +71,7 @@ pub struct GameState {
 impl Default for GameState {
     fn default() -> Self {
         Self {
+            won: false,
             frozen: false,
             scene: None,
             scene_start: Duration::from_nanos(0),

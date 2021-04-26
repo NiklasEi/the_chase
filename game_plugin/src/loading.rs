@@ -30,6 +30,7 @@ pub struct FontAssets {
 
 pub struct AudioAssets {
     pub fall: Handle<AudioSource>,
+    pub won: Handle<AudioSource>,
     pub button_click: Handle<AudioSource>,
     pub wall_moving: Handle<AudioSource>,
     pub ground_background: Handle<AudioSource>,
@@ -131,6 +132,7 @@ fn check_state(
 
     commands.insert_resource(AudioAssets {
         fall: asset_server.get_handle(PATHS.audio_fall),
+        won: asset_server.get_handle(PATHS.audio_fall),
         button_click: asset_server.get_handle(PATHS.audio_button_click),
         wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
         ground_background: asset_server.get_handle(PATHS.audio_ground_background),

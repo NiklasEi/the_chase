@@ -28,6 +28,7 @@ pub enum CutScene {
     MapTransition {
         to: Map,
     },
+    Won
 }
 
 impl Plugin for ScenesPlugin {
@@ -191,6 +192,48 @@ fn run_transition_scene(
             *current_map = to.clone();
             game_state.scene = None;
             game_state.frozen = false;
+            return;
+        }
+    }
+}
+
+fn run_won_scene(
+    mut game_state: ResMut<GameState>,
+    time: Res<Time>,
+    mut audio_effect: EventWriter<AudioEffect>,
+    audio_assets: Res<AudioAssets>,
+    mut pause_background: EventWriter<PauseBackground>,
+    mut _player: Query<&mut Transform, (With<Player>, Without<PlayerCamera>, Without<Acorn>)>,
+    mut acorn: Query<&mut Transform, (With<Acorn>, Without<PlayerCamera>, Without<Player>)>,
+    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>, Without<Acorn>)>,
+) {
+    if let Some(scene) = game_state.scene.clone() {
+        if let CutScene::Won = scene {
+            if game_state.scene_step == 0 {
+                game_state.scene_step += 1;
+                pause_background.send(PauseBackground);
+                audio_effect.send(AudioEffect {
+                    handle: audio_assets.won.clone(),
+                })
+            }
+            let camera_scale: Vec3 = Vec3::new(-0.5, -0.5, 0.);
+            const ZOOM: Duration = Duration::from_secs(2);
+
+            if time
+                .time_since_startup()
+                .lt(&(game_state.scene_start + ZOOM))
+            {
+                if let Ok(mut camera_transform) = camera.single_mut() {
+                    camera_transform.scale +=
+                        (camera_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
+                    if let Ok(mut acorn_transform) = acorn.single_mut() {
+                        camera_transform.translation = acorn_transform.translation * camera_transform.scale;
+                    }
+                }
+                return;
+            }
+            game_state.won = true;
+            game_state.scene = None;
             return;
         }
     }
