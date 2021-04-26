@@ -32,7 +32,10 @@ pub struct AudioAssets {
     pub fall: Handle<AudioSource>,
     pub button_click: Handle<AudioSource>,
     pub wall_moving: Handle<AudioSource>,
-    pub happy_background: Handle<AudioSource>,
+    pub ground_background: Handle<AudioSource>,
+    pub dirt_background: Handle<AudioSource>,
+    pub stone_background: Handle<AudioSource>,
+    pub lava_background: Handle<AudioSource>,
 }
 
 pub struct TextureAssets {
@@ -50,7 +53,10 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     audio.push(asset_server.load_untyped(PATHS.audio_fall));
     audio.push(asset_server.load_untyped(PATHS.audio_button_click));
     audio.push(asset_server.load_untyped(PATHS.audio_wall_moving));
-    audio.push(asset_server.load_untyped(PATHS.audio_happy_background));
+    audio.push(asset_server.load_untyped(PATHS.audio_ground_background));
+    audio.push(asset_server.load_untyped(PATHS.audio_dirt_background));
+    audio.push(asset_server.load_untyped(PATHS.audio_stone_background));
+    audio.push(asset_server.load_untyped(PATHS.audio_lava_background));
 
     let texture_names = [
         "dirtexit",
@@ -123,7 +129,10 @@ fn check_state(
         fall: asset_server.get_handle(PATHS.audio_fall),
         button_click: asset_server.get_handle(PATHS.audio_button_click),
         wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
-        happy_background: asset_server.get_handle(PATHS.audio_happy_background),
+        ground_background: asset_server.get_handle(PATHS.audio_ground_background),
+        dirt_background: asset_server.get_handle(PATHS.audio_dirt_background),
+        stone_background: asset_server.get_handle(PATHS.audio_stone_background),
+        lava_background: asset_server.get_handle(PATHS.audio_lava_background),
     });
 
     commands.insert_resource(TextureAssets {

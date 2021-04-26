@@ -40,7 +40,7 @@ fn setup_menu(
     mut background_audio: EventWriter<BackgroundAudio>,
 ) {
     background_audio.send(BackgroundAudio {
-        handle: audio_assets.happy_background.clone(),
+        handle: audio_assets.ground_background.clone(),
     });
     commands.spawn_bundle(UiCameraBundle::default());
     commands

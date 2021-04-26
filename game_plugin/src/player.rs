@@ -1,10 +1,12 @@
 use crate::actions::Actions;
-use crate::loading::TextureAssets;
+use crate::audio::BackgroundAudio;
+use crate::loading::{AudioAssets, TextureAssets};
 use crate::map::{Collide, Dimensions, Map, MapSystemLabels, TILE_SIZE};
 use crate::scenes::TriggerScene;
 use crate::{GameStage, GameState};
 use bevy::prelude::*;
 use std::f32::consts::PI;
+use std::ops::Deref;
 
 pub struct PlayerPlugin;
 
@@ -125,6 +127,8 @@ fn move_player(
 fn reset_player_position(
     current_map: Res<Map>,
     windows: Res<Windows>,
+    audio_assets: Res<AudioAssets>,
+    mut background_audio: EventWriter<BackgroundAudio>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<PlayerCamera>)>,
     mut camera_query: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
@@ -146,6 +150,18 @@ fn reset_player_position(
             camera_transform.translation.x = x;
             camera_transform.translation.y = y;
             camera_transform.scale = Vec3::new(1., 1., 1.);
+        }
+        match current_map.deref() {
+            Map::Dirt => background_audio.send(BackgroundAudio {
+                handle: audio_assets.dirt_background.clone(),
+            }),
+            Map::Stone => background_audio.send(BackgroundAudio {
+                handle: audio_assets.stone_background.clone(),
+            }),
+            Map::Lava => background_audio.send(BackgroundAudio {
+                handle: audio_assets.lava_background.clone(),
+            }),
+            _ => (),
         }
     }
 }
