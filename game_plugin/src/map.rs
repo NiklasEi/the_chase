@@ -101,7 +101,7 @@ impl Map {
                 row: 16,
             }),
             Map::Stone => self.position_from_slot(Slot { column: 7, row: 12 }),
-            Map::Lava => self.position_from_slot(Slot { column: 1, row: 18 }),
+            Map::Lava => self.position_from_slot(Slot { column: 6, row: 23 }),
         }
     }
 
@@ -111,8 +111,8 @@ impl Map {
             Map::Dirt => self.position_from_slot(Slot { column: 12, row: 8 }),
             Map::Stone => self.position_from_slot(Slot { column: 14, row: 5 }),
             Map::Lava => self.position_from_slot(Slot {
-                column: 17,
-                row: 17,
+                column: 22,
+                row: 22,
             }),
         }
     }
@@ -123,8 +123,8 @@ impl Map {
             Map::Dirt => self.position_from_slot(Slot { column: 10, row: 8 }),
             Map::Stone => self.position_from_slot(Slot { column: 14, row: 7 }),
             Map::Lava => self.position_from_slot(Slot {
-                column: 17,
-                row: 15,
+                column: 22,
+                row: 20,
             }),
         }
     }
@@ -144,8 +144,8 @@ impl Map {
                 rows: 20,
             },
             Map::Lava => Dimensions {
-                columns: 20,
-                rows: 20,
+                columns: 30,
+                rows: 30,
             },
         }
     }
@@ -439,7 +439,7 @@ fn check_active_elements(
                 player_transform.translation.y,
             )
             .distance(Vec2::new(transform.translation.x, transform.translation.y))
-                < 10.
+                < 25.
             {
                 commands.entity(entity).remove::<Trigger>();
                 if let ActiveElement::Button {

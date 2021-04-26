@@ -115,7 +115,7 @@ fn move_player(
             map.goal_position().0,
             map.goal_position().1,
             PLAYER_Z,
-        )) < 20.
+        )) < 25.
         {
             if let Some(scene) = map.goal_scene() {
                 trigger_scene.send(TriggerScene { scene });

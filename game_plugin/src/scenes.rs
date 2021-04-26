@@ -250,6 +250,12 @@ fn run_won_scene(
                 return;
             }
             if game_state.scene_step == 0 {
+                if let Ok(mut camera_transform) = camera.single_mut() {
+                    if let Ok(acorn_transform) = acorn.single_mut() {
+                        camera_transform.translation.x = acorn_transform.translation.x;
+                        camera_transform.translation.y = acorn_transform.translation.y;
+                    }
+                }
                 game_state.scene_step += 1;
                 pause_background.send(PauseBackground);
                 audio_effect.send(AudioEffect {
@@ -266,10 +272,6 @@ fn run_won_scene(
                 if let Ok(mut camera_transform) = camera.single_mut() {
                     camera_transform.scale +=
                         (camera_scale / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
-                    if let Ok(acorn_transform) = acorn.single_mut() {
-                        camera_transform.translation =
-                            acorn_transform.translation * camera_transform.scale;
-                    }
                 }
                 return;
             }
