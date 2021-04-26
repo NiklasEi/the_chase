@@ -1,7 +1,8 @@
 [package]
-name = "bevy_game" # ToDo
+name = "the_chase"
 version = "0.1.0"
-authors = ["Niklas Eicker <git@nikl.me>"] # ToDo: you are the author ;)
+publish = false
+authors = ["Niklas Eicker <git@nikl.me>", "Sirconplus"]
 edition = "2018"
 
 [profile.dev]
