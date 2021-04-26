@@ -29,6 +29,8 @@ pub enum CutScene {
         wall: (f32, f32),
     },
     MapTransition {
+        camera_from: (f32, f32),
+        camera_to: (f32, f32),
         to: Map,
     },
     Won,
@@ -184,7 +186,12 @@ fn run_transition_scene(
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
     if let Some(scene) = game_state.scene.clone() {
-        if let CutScene::MapTransition { to } = scene {
+        if let CutScene::MapTransition {
+            to,
+            camera_to,
+            camera_from,
+        } = scene
+        {
             if actions.scip_scene {
                 stop_audio_effects.send(StopAudioEffects);
                 *current_map = to.clone();
@@ -207,13 +214,20 @@ fn run_transition_scene(
                 .time_since_startup()
                 .lt(&(game_state.scene_start + ZOOM))
             {
-                if let Ok(mut transform) = camera.single_mut() {
-                    transform.scale +=
+                if let Ok(mut camera_transform) = camera.single_mut() {
+                    camera_transform.scale +=
                         (camera_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
-                }
-                if let Ok(mut transform) = player.single_mut() {
-                    transform.scale +=
-                        (player_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
+                    let diff = ((Vec2::from(camera_to) - Vec2::from(camera_from))
+                        / ZOOM.as_secs_f32())
+                        * time.delta().as_secs_f32();
+                    camera_transform.translation.x += diff.x;
+                    camera_transform.translation.x += diff.y;
+                    if let Ok(mut player_transform) = player.single_mut() {
+                        player_transform.scale +=
+                            (player_scale_offset / ZOOM.as_secs_f32()) * time.delta().as_secs_f32();
+                        player_transform.translation.x += diff.x;
+                        player_transform.translation.x += diff.y;
+                    }
                 }
                 return;
             }

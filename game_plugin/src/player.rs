@@ -117,7 +117,10 @@ fn move_player(
             PLAYER_Z,
         )) < 25.
         {
-            if let Some(scene) = map.goal_scene() {
+            if let Some(scene) = map.goal_scene((
+                player_transform.translation.x,
+                player_transform.translation.y,
+            )) {
                 trigger_scene.send(TriggerScene { scene });
             }
         }

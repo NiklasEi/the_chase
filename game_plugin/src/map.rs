@@ -192,11 +192,23 @@ impl Map {
         }
     }
 
-    pub fn goal_scene(&self) -> Option<CutScene> {
+    pub fn goal_scene(&self, from: (f32, f32)) -> Option<CutScene> {
         match self {
-            Map::Ground => Some(CutScene::MapTransition { to: Map::Dirt }),
-            Map::Dirt => Some(CutScene::MapTransition { to: Map::Stone }),
-            Map::Stone => Some(CutScene::MapTransition { to: Map::Lava }),
+            Map::Ground => Some(CutScene::MapTransition {
+                to: Map::Dirt,
+                camera_to: self.goal_position(),
+                camera_from: from,
+            }),
+            Map::Dirt => Some(CutScene::MapTransition {
+                to: Map::Stone,
+                camera_to: self.goal_position(),
+                camera_from: from,
+            }),
+            Map::Stone => Some(CutScene::MapTransition {
+                to: Map::Lava,
+                camera_to: self.goal_position(),
+                camera_from: from,
+            }),
             Map::Lava => Some(CutScene::Won),
         }
     }
