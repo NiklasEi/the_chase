@@ -224,6 +224,10 @@ impl Map {
                     position: Slot { column: 13, row: 9 },
                     connected_wall: Slot { column: 10, row: 6 },
                 },
+                ActiveElement::Button {
+                    position: Slot { column: 2, row: 1 },
+                    connected_wall: Slot { column: 8, row: 1 },
+                },
             ],
             Map::Dirt => vec![
                 ActiveElement::Button {
@@ -261,6 +265,10 @@ impl Map {
                 },
                 ActiveElement::Button {
                     position: Slot { column: 8, row: 7 },
+                    connected_wall: Slot { column: 16, row: 6 },
+                },
+                ActiveElement::Button {
+                    position: Slot { column: 19, row: 8 },
                     connected_wall: Slot {
                         column: 20,
                         row: 16,
