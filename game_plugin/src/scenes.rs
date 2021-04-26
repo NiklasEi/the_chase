@@ -243,7 +243,7 @@ fn run_won_scene(
             if actions.scip_scene {
                 stop_audio_effects.send(StopAudioEffects);
                 background_audio.send(BackgroundAudio {
-                    handle: audio_assets.ground_background.clone(),
+                    handles: vec![audio_assets.ground_background.clone()],
                 });
                 game_state.won = true;
                 game_state.scene = None;
@@ -276,7 +276,7 @@ fn run_won_scene(
                 return;
             }
             background_audio.send(BackgroundAudio {
-                handle: audio_assets.ground_background.clone(),
+                handles: vec![audio_assets.ground_background.clone()],
             });
             game_state.won = true;
             game_state.scene = None;

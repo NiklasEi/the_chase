@@ -153,13 +153,13 @@ fn reset_player_position(
         }
         match current_map.deref() {
             Map::Dirt => background_audio.send(BackgroundAudio {
-                handle: audio_assets.dirt_background.clone(),
+                handles: vec![audio_assets.dirt_background.clone()],
             }),
             Map::Stone => background_audio.send(BackgroundAudio {
-                handle: audio_assets.stone_background.clone(),
+                handles: vec![audio_assets.stone_background.clone()],
             }),
             Map::Lava => background_audio.send(BackgroundAudio {
-                handle: audio_assets.lava_background.clone(),
+                handles: vec![audio_assets.lava_background.clone()],
             }),
             _ => (),
         }

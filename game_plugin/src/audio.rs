@@ -34,7 +34,7 @@ pub struct ResumeBackground;
 pub struct StopAudioEffects;
 
 pub struct BackgroundAudio {
-    pub handle: Handle<AudioSource>,
+    pub handles: Vec<Handle<AudioSource>>,
 }
 
 pub struct AudioEffect {
@@ -82,7 +82,9 @@ fn play_background(
 ) {
     for background in events.iter() {
         audio.stop_channel(&channels.background);
-        audio.play_looped_in_channel(background.handle.clone(), &channels.background);
+        for handle in &background.handles {
+            audio.play_looped_in_channel(handle.clone(), &channels.background);
+        }
     }
 }
 

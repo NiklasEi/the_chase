@@ -34,6 +34,7 @@ pub struct AudioAssets {
     pub button_click: Handle<AudioSource>,
     pub wall_moving: Handle<AudioSource>,
     pub ground_background: Handle<AudioSource>,
+    pub ground_background_effects: Handle<AudioSource>,
     pub dirt_background: Handle<AudioSource>,
     pub stone_background: Handle<AudioSource>,
     pub lava_background: Handle<AudioSource>,
@@ -57,6 +58,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     audio.push(asset_server.load_untyped(PATHS.audio_button_click));
     audio.push(asset_server.load_untyped(PATHS.audio_wall_moving));
     audio.push(asset_server.load_untyped(PATHS.audio_ground_background));
+    audio.push(asset_server.load_untyped(PATHS.audio_ground_background_effects));
     audio.push(asset_server.load_untyped(PATHS.audio_dirt_background));
     audio.push(asset_server.load_untyped(PATHS.audio_stone_background));
     audio.push(asset_server.load_untyped(PATHS.audio_lava_background));
@@ -136,6 +138,7 @@ fn check_state(
         button_click: asset_server.get_handle(PATHS.audio_button_click),
         wall_moving: asset_server.get_handle(PATHS.audio_wall_moving),
         ground_background: asset_server.get_handle(PATHS.audio_ground_background),
+        ground_background_effects: asset_server.get_handle(PATHS.audio_ground_background_effects),
         dirt_background: asset_server.get_handle(PATHS.audio_dirt_background),
         stone_background: asset_server.get_handle(PATHS.audio_stone_background),
         lava_background: asset_server.get_handle(PATHS.audio_lava_background),

@@ -40,7 +40,10 @@ fn setup_menu(
     mut background_audio: EventWriter<BackgroundAudio>,
 ) {
     background_audio.send(BackgroundAudio {
-        handle: audio_assets.ground_background.clone(),
+        handles: vec![
+            audio_assets.ground_background.clone(),
+            audio_assets.ground_background_effects.clone(),
+        ],
     });
     commands.spawn_bundle(UiCameraBundle::default());
     commands
