@@ -1,5 +1,5 @@
 use crate::audio::{AudioEffect, PauseBackground, ResumeBackground};
-use crate::loading::AudioAssets;
+use crate::loading::{AudioAssets, TextureAssets};
 use crate::map::{Acorn, ActiveElement, Collide, Map};
 use crate::player::{Player, PlayerCamera};
 use crate::{GameStage, GameState};
@@ -21,7 +21,8 @@ pub enum CutScene {
         acorn_falls: bool,
     },
     ActivateButton {
-        button: (f32, f32),
+        button: Entity,
+        player: (f32, f32),
         wall: (f32, f32),
     },
     MapTransition {
@@ -199,17 +200,30 @@ fn run_activate_button_scene(
     mut commands: Commands,
     mut game_state: ResMut<GameState>,
     time: Res<Time>,
+    textures: Res<TextureAssets>,
     mut audio_effect: EventWriter<AudioEffect>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     audio_assets: Res<AudioAssets>,
     mut pause_background: EventWriter<PauseBackground>,
     mut resume_background: EventWriter<ResumeBackground>,
-    elements: Query<(Entity, &Transform), (With<ActiveElement>, Without<PlayerCamera>)>,
+    mut elements: Query<
+        (Entity, &Transform, &mut Handle<ColorMaterial>),
+        (With<ActiveElement>, Without<PlayerCamera>),
+    >,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<ActiveElement>)>,
 ) {
     if let Some(scene) = game_state.scene.clone() {
-        if let CutScene::ActivateButton { button, wall } = scene {
+        if let CutScene::ActivateButton {
+            button,
+            player,
+            wall,
+        } = scene
+        {
             if game_state.scene_step == 0 {
                 game_state.scene_step += 1;
+                if let Ok((_entity, _transform, mut material)) = elements.get_mut(button) {
+                    *material = materials.add(textures.texture_button_down.clone().into());
+                }
                 pause_background.send(PauseBackground);
                 audio_effect.send(AudioEffect {
                     handle: audio_assets.button_click.clone(),
@@ -233,8 +247,8 @@ fn run_activate_button_scene(
             {
                 resume_background.send(ResumeBackground);
                 if let Ok(mut transform) = camera.single_mut() {
-                    transform.translation.x = button.0;
-                    transform.translation.y = button.1;
+                    transform.translation.x = player.0;
+                    transform.translation.y = player.1;
                 }
                 game_state.scene = None;
                 game_state.frozen = false;
@@ -263,9 +277,9 @@ fn run_activate_button_scene(
 
             if game_state.scene_step == 2 {
                 game_state.scene_step += 1;
-                for (entity, transform) in elements.iter() {
+                for (entity, transform, mut material) in elements.iter_mut() {
                     if transform.translation.x == wall.0 && transform.translation.y == wall.1 {
-                        // ToDo: change texture; make wall disappear
+                        *material = materials.add(textures.texture_wall_down.clone().into());
                         commands.entity(entity).remove::<Collide>();
                     }
                 }
@@ -275,11 +289,11 @@ fn run_activate_button_scene(
                 .time_since_startup()
                 .lt(&(CAMERA_TO_WALL + game_state.scene_start))
             {
-                (Vec2::new(wall.0 - button.0, wall.1 - button.1)
+                (Vec2::new(wall.0 - player.0, wall.1 - player.1)
                     / (CAMERA_TO_WALL - CAMERA_ON_PLAYER).as_secs_f32())
                     * time.delta().as_secs_f32()
             } else {
-                (Vec2::new(button.0 - wall.0, button.1 - wall.1)
+                (Vec2::new(player.0 - wall.0, player.1 - wall.1)
                     / (CAMERA_BACK_TO_PLAYER - CAMERA_ON_WALL).as_secs_f32())
                     * time.delta().as_secs_f32()
             };

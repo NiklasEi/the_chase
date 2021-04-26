@@ -11,6 +11,8 @@ pub struct AssetPaths {
     pub texture_acorn: &'static str,
     pub texture_button: &'static str,
     pub texture_button_active: &'static str,
+    pub texture_wall_up: &'static str,
+    pub texture_wall_down: &'static str,
 }
 
 pub const PATHS: AssetPaths = AssetPaths {
@@ -26,4 +28,6 @@ pub const PATHS: AssetPaths = AssetPaths {
     texture_acorn: "textures/acorn.png",
     texture_button: "textures/button.png",
     texture_button_active: "textures/button_active.png",
+    texture_wall_up: "textures/wall_up.png",
+    texture_wall_down: "textures/wall_down.png",
 };

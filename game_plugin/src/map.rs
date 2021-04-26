@@ -370,7 +370,6 @@ fn draw_map(
 fn draw_active_elements(
     mut commands: Commands,
     current_map: Res<Map>,
-    asset_server: Res<AssetServer>,
     elements: Query<Entity, With<ActiveElement>>,
     textures: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -392,7 +391,7 @@ fn draw_active_elements(
             let connected_wall_slot = current_map.tiled_slot_to_bevy_slot(connected_wall);
             commands
                 .spawn_bundle(SpriteBundle {
-                    material: materials.add(textures.texture_button.clone().into()),
+                    material: materials.add(textures.texture_button_up.clone().into()),
                     transform: Transform::from_translation(Vec3::new(
                         button_slot.column as f32 * TILE_SIZE,
                         button_slot.row as f32 * TILE_SIZE,
@@ -404,8 +403,7 @@ fn draw_active_elements(
                 .insert(Trigger);
             commands
                 .spawn_bundle(SpriteBundle {
-                    material: materials
-                        .add(asset_server.get_handle("textures/stonewall.png").into()),
+                    material: materials.add(textures.texture_wall_up.clone().into()),
                     transform: Transform::from_translation(Vec3::new(
                         connected_wall_slot.column as f32 * TILE_SIZE,
                         connected_wall_slot.row as f32 * TILE_SIZE,
@@ -453,7 +451,8 @@ fn check_active_elements(
                     let window = windows.get_primary().expect("No primary window");
                     trigger_scene.send(TriggerScene {
                         scene: CutScene::ActivateButton {
-                            button: calc_camera_position(
+                            button: entity,
+                            player: calc_camera_position(
                                 player_transform.translation.x,
                                 player_transform.translation.y,
                                 window,
