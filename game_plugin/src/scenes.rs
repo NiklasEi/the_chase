@@ -275,7 +275,7 @@ fn run_won_scene(
                     handle: audio_assets.won.clone(),
                 })
             }
-            let camera_scale: Vec3 = Vec3::new(-0.5, -0.5, 0.);
+            let camera_scale: Vec3 = Vec3::new(-0.7, -0.7, 0.);
             const ZOOM: Duration = Duration::from_secs(2);
 
             if time

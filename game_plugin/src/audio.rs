@@ -47,8 +47,8 @@ struct AudioChannels {
 }
 
 fn start_audio(audio: Res<Audio>, channels: Res<AudioChannels>) {
-    audio.set_volume_in_channel(0.3, &channels.effects);
-    audio.set_volume_in_channel(0.2, &channels.background);
+    audio.set_volume_in_channel(0.4, &channels.effects);
+    audio.set_volume_in_channel(0.4, &channels.background);
 }
 
 fn stop_audio(audio: Res<Audio>, channels: Res<AudioChannels>) {
